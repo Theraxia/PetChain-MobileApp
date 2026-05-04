@@ -13,6 +13,7 @@ import {
 import { v4 as uuid } from 'uuid';
 
 import {
+  AppointmentStatus,
   type Appointment,
   cancelAppointmentReminder,
   getAppointments,
@@ -77,13 +78,18 @@ const AppointmentScreen: React.FC = () => {
     const appt: Appointment = {
       id: uuid(),
       petId: form.petId.trim() || uuid(),
+      vetId: 'temp-vet-id', // Required field
       petName: form.petName.trim(),
       title: form.title.trim(),
       date: dateObj.toISOString(),
+      time: dateObj.toTimeString().slice(0, 5), // Required HH:MM format
+      type: 'ROUTINE_CHECKUP' as Appointment['type'],
       location: form.location.trim() || undefined,
       vetName: form.vetName.trim() || undefined,
       notes: form.notes.trim() || undefined,
-      status: 'upcoming',
+      status: AppointmentStatus.PENDING,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     const notifId = await scheduleAppointmentReminder(appt).catch(() => null);
@@ -107,7 +113,7 @@ const AppointmentScreen: React.FC = () => {
           if (appt.notificationId) {
             await cancelAppointmentReminder(appt.notificationId).catch(() => {});
           }
-          await saveAppointment({ ...appt, status: 'cancelled' });
+          await saveAppointment({ ...appt, status: AppointmentStatus.CANCELLED });
           setDetailAppt(null);
           await load();
         },
@@ -132,7 +138,7 @@ const AppointmentScreen: React.FC = () => {
     const updated: Appointment = {
       ...detailAppt,
       date: dateObj.toISOString(),
-      status: 'upcoming',
+      status: AppointmentStatus.PENDING,
       notificationId: undefined,
     };
     const notifId = await scheduleAppointmentReminder(updated).catch(() => null);
@@ -146,23 +152,31 @@ const AppointmentScreen: React.FC = () => {
 
   // ─── Render helpers ──────────────────────────────────────────────────────────
 
-  const renderItem = useCallback(({ item }: { item: Appointment }) => (
-    <TouchableOpacity style={styles.card} onPress={() => setDetailAppt(item)}>
-      <View style={styles.cardLeft}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardSub}>{item.petName}</Text>
-        {item.vetName ? <Text style={styles.cardMeta}>Dr. {item.vetName}</Text> : null}
-        {item.location ? <Text style={styles.cardMeta}>📍 {item.location}</Text> : null}
-      </View>
-      <View style={styles.cardRight}>
-        <Text style={styles.cardDate}>{formatLocalDate(item.date)}</Text>
-        <Text style={styles.cardTime}>{formatLocalTime(item.date)}</Text>
-        <View style={[styles.badge, item.status === 'cancelled' && styles.badgeCancelled]}>
-          <Text style={styles.badgeText}>{item.status}</Text>
+  const renderItem = useCallback(
+    ({ item }: { item: Appointment }) => (
+      <TouchableOpacity style={styles.card} onPress={() => setDetailAppt(item)}>
+        <View style={styles.cardLeft}>
+          <Text style={styles.cardTitle}>{item.title}</Text>
+          <Text style={styles.cardSub}>{item.petName}</Text>
+          {item.vetName ? <Text style={styles.cardMeta}>Dr. {item.vetName}</Text> : null}
+          {item.location ? <Text style={styles.cardMeta}>📍 {item.location}</Text> : null}
         </View>
-      </View>
-    </TouchableOpacity>
-  ), []);
+        <View style={styles.cardRight}>
+          <Text style={styles.cardDate}>{formatLocalDate(item.date)}</Text>
+          <Text style={styles.cardTime}>{formatLocalTime(item.date)}</Text>
+          <View
+            style={[
+              styles.badge,
+              item.status === AppointmentStatus.CANCELLED && styles.badgeCancelled,
+            ]}
+          >
+            <Text style={styles.badgeText}>{item.status}</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    ),
+    [],
+  );
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 
@@ -271,7 +285,7 @@ const AppointmentScreen: React.FC = () => {
               {detailAppt.notes && <DetailRow label="Notes" value={detailAppt.notes} />}
               <DetailRow label="Status" value={detailAppt.status} />
 
-              {detailAppt.status === 'upcoming' && (
+              {detailAppt.status === AppointmentStatus.PENDING && (
                 <>
                   <TouchableOpacity
                     style={styles.primaryBtn}

@@ -1,9 +1,9 @@
-import { 
-  formatDate, 
-  parseDate, 
-  isValidDate, 
-  getDateDifference, 
-  getRelativeTime 
+import {
+  formatDate,
+  parseDate,
+  isValidDate,
+  getDateDifference,
+  getRelativeTime,
 } from '../dateUtils';
 
 describe('dateUtils', () => {

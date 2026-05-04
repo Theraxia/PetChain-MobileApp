@@ -54,8 +54,20 @@ export async function globalSearch(
   category: SearchCategory = 'all',
   localData?: {
     pets?: { id: string; name: string; species: string; breed?: string }[];
-    appointments?: { id: string; title?: string; petName?: string; date?: string; status?: string }[];
-    medicalRecords?: { id: string; title?: string; petName?: string; date?: string; type?: string }[];
+    appointments?: {
+      id: string;
+      title?: string;
+      petName?: string;
+      date?: string;
+      status?: string;
+    }[];
+    medicalRecords?: {
+      id: string;
+      title?: string;
+      petName?: string;
+      date?: string;
+      type?: string;
+    }[];
   },
 ): Promise<SearchResults> {
   if (!query.trim()) {
@@ -148,7 +160,7 @@ export function debouncedSearch(
       const results = await globalSearch(query, category, localData);
       onResults(results);
     } catch (err) {
-      logError(err as Error, 'debouncedSearch');
+      logError(err as Error, { context: 'debouncedSearch' });
     }
   }, DEBOUNCE_DELAY_MS);
 

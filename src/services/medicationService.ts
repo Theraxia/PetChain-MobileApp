@@ -1,3 +1,5 @@
+import * as Notifications from 'expo-notifications';
+
 import {
   getAllMedications,
   upsertMedication,
@@ -5,8 +7,6 @@ import {
   getDoseLogs as dbGetDoseLogs,
   addDoseLog as dbAddDoseLog,
 } from './localDB';
-import * as Notifications from 'expo-notifications';
-
 import type { Medication } from '../models/Medication';
 
 export type { Medication };
@@ -20,7 +20,7 @@ export interface DoseLog {
 }
 
 export async function getMedications(): Promise<Medication[]> {
-  return (await getAllMedications()) as Medication[];
+  return getAllMedications<Medication>();
 }
 
 export async function saveMedication(med: Medication): Promise<void> {
@@ -32,7 +32,7 @@ export async function deleteMedication(id: string): Promise<void> {
 }
 
 export async function getDoseLogs(): Promise<DoseLog[]> {
-  return (await dbGetDoseLogs()) as DoseLog[];
+  return dbGetDoseLogs<DoseLog>();
 }
 
 export async function logDose(log: DoseLog): Promise<void> {

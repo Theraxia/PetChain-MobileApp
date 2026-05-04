@@ -11,12 +11,20 @@ async function main() {
     const value = parseInt(args[i + 1], 10);
 
     if (!isNaN(value)) {
-      const configKey = key === 'owners' ? 'numOwners' :
-                       key === 'vets' ? 'numVets' :
-                       key === 'pets' ? 'petsPerOwner' :
-                       key === 'records' ? 'recordsPerPet' :
-                       key === 'appointments' ? 'appointmentsPerPet' :
-                       key === 'medications' ? 'medicationsPerPet' : null;
+      const configKey =
+        key === 'owners'
+          ? 'numOwners'
+          : key === 'vets'
+            ? 'numVets'
+            : key === 'pets'
+              ? 'petsPerOwner'
+              : key === 'records'
+                ? 'recordsPerPet'
+                : key === 'appointments'
+                  ? 'appointmentsPerPet'
+                  : key === 'medications'
+                    ? 'medicationsPerPet'
+                    : null;
 
       if (configKey) {
         config[configKey] = value;

@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const React = require('react');
 
 const host = (name: string) =>
@@ -52,10 +53,7 @@ ReactNative.FlatList = function FlatListMock({
           React.createElement(
             React.Fragment,
             {
-              key:
-                typeof keyExtractor === 'function'
-                  ? keyExtractor(item, index)
-                  : String(index),
+              key: typeof keyExtractor === 'function' ? keyExtractor(item, index) : String(index),
             },
             renderItem({ item, index }),
           ),

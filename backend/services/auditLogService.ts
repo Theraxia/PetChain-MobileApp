@@ -38,7 +38,13 @@ function log(params: LogParams): void {
 /**
  * Query audit logs with optional filters and pagination.
  */
-function query(q: AuditLogQuery = {}): { data: AuditLog[]; total: number; page: number; limit: number; totalPages: number } {
+function query(q: AuditLogQuery = {}): {
+  data: AuditLog[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+} {
   const page = Math.max(1, q.page ?? 1);
   const limit = Math.min(200, Math.max(1, q.limit ?? 50));
 
@@ -48,8 +54,14 @@ function query(q: AuditLogQuery = {}): { data: AuditLog[]; total: number; page: 
   if (q.action) result = result.filter((l) => l.action === q.action);
   if (q.resourceType) result = result.filter((l) => l.resourceType === q.resourceType);
   if (q.resourceId) result = result.filter((l) => l.resourceId === q.resourceId);
-  if (q.startDate) result = result.filter((l) => l.createdAt >= q.startDate!);
-  if (q.endDate) result = result.filter((l) => l.createdAt <= q.endDate!);
+  if (q.startDate) {
+    const s = q.startDate;
+    result = result.filter((l) => l.createdAt >= s);
+  }
+  if (q.endDate) {
+    const e = q.endDate;
+    result = result.filter((l) => l.createdAt <= e);
+  }
 
   // Newest first
   result.sort((a, b) => b.createdAt.localeCompare(a.createdAt));

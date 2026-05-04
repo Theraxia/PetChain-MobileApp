@@ -1,5 +1,6 @@
-import type { Meta, StoryObj } from '@storybook/react-native';
+import type { Meta, StoryObj } from '@storybook/react';
 import { Text, View } from 'react-native';
+
 import { ErrorBoundary } from './ErrorBoundary';
 
 /**
@@ -38,9 +39,7 @@ export const WithChildren: Story = {
   render: () => (
     <ErrorBoundary>
       <View style={{ padding: 24 }}>
-        <Text style={{ fontSize: 16, color: '#333' }}>
-          ✅ No error — children render normally.
-        </Text>
+        <Text style={{ fontSize: 16, color: '#333' }}>✅ No error — children render normally.</Text>
       </View>
     </ErrorBoundary>
   ),

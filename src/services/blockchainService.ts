@@ -55,7 +55,7 @@ const API_BASE_URL = 'https://api.petchain.app/api';
 const CACHE_TTL_MS = 2 * 60 * 1000;
 
 // Stellar Network Configuration
-const STELLAR_NETWORK = 'TESTNET'; // Change to 'PUBLIC' for production
+const STELLAR_NETWORK: string = 'TESTNET'; // Change to 'PUBLIC' for production
 const HORIZON_URL =
   STELLAR_NETWORK === 'PUBLIC'
     ? 'https://horizon.stellar.org'
@@ -421,9 +421,17 @@ export const submitStellarTransaction = async (
     const result = await server.submitTransaction(transaction);
     return result;
   } catch (error) {
-    if (error instanceof StellarSdk.Horizon.HorizonApi.BadRequestError) {
+    if (
+      error &&
+      (error as { response?: { data?: { extras?: { result_codes?: { transaction?: string } } } } })
+        .response?.data
+    ) {
+      const txError = error as {
+        response: { data: { extras?: { result_codes?: { transaction?: string } } } };
+        message?: string;
+      };
       throw new BlockchainServiceError(
-        `Transaction failed: ${error.response.data.extras?.result_codes?.transaction}`,
+        `Transaction failed: ${txError.response.data.extras?.result_codes?.transaction}`,
         'TRANSACTION_FAILED',
       );
     }

@@ -1,7 +1,6 @@
-import { BarCodeScanner } from 'expo-barcode-scanner';
 import type { BarCodeScannerResult } from 'expo-barcode-scanner';
-import { Camera, CameraType } from 'expo-camera';
-import React, { useEffect, useRef, useState } from 'react';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Linking,
@@ -38,22 +37,12 @@ const QRScannerScreen: React.FC<QRScannerScreenProps> = ({
   const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastScanRef = useRef<number>(0);
 
-  useEffect(() => {
-    void requestCameraPermission();
+  const [_permission, requestPermission] = useCameraPermissions();
 
-    return () => {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      const timeout = scanTimeoutRef.current;
-      if (timeout) {
-        clearTimeout(timeout);
-      }
-    };
-  }, []);
-
-  const requestCameraPermission = async () => {
+  const requestCameraPermission = useCallback(async () => {
     try {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      const isGranted = status === 'granted';
+      const result = await requestPermission();
+      const isGranted = result?.status === 'granted';
       setHasPermission(isGranted);
 
       if (!isGranted && Platform.OS === 'android') {
@@ -63,8 +52,17 @@ const QRScannerScreen: React.FC<QRScannerScreenProps> = ({
       console.warn('Camera permission error:', err);
       setHasPermission(false);
     }
-    recordLoadOnce();
-  };
+  }, [requestPermission]);
+
+  useEffect(() => {
+    void requestCameraPermission();
+
+    return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      const timeout = scanTimeoutRef.current;
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [requestCameraPermission]);
 
   const handleBarCodeScanned = ({ data }: BarCodeScannerResult) => {
     // Debounce: prevent multiple scans within 500ms
@@ -132,19 +130,18 @@ const QRScannerScreen: React.FC<QRScannerScreenProps> = ({
 
     return (
       <View style={styles.cameraContainer}>
-        <Camera
+        <CameraView
           style={styles.camera}
-          type={CameraType.back}
-          flashMode={torchEnabled ? 'torch' : 'off'}
-          onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-          barCodeScannerSettings={{
-            barCodeTypes: [
-              BarCodeScanner.Constants.BarCodeType.qr,
-              BarCodeScanner.Constants.BarCodeType.datamatrix,
-              BarCodeScanner.Constants.BarCodeType.pdf417,
-            ],
+          facing="back"
+          enableTorch={torchEnabled}
+          onBarcodeScanned={
+            scanned
+              ? undefined
+              : (result) => handleBarCodeScanned({ data: result.data } as BarCodeScannerResult)
+          }
+          barcodeScannerSettings={{
+            barcodeTypes: ['qr', 'datamatrix', 'pdf417'],
           }}
-          ratio="16:9"
         >
           <View style={styles.overlay}>
             <View style={styles.scanFrame}>
@@ -160,7 +157,7 @@ const QRScannerScreen: React.FC<QRScannerScreenProps> = ({
             </View>
             <Text style={styles.scanText}>Align QR code within frame</Text>
           </View>
-        </Camera>
+        </CameraView>
 
         <View style={styles.controlsContainer}>
           <TouchableOpacity
@@ -198,7 +195,6 @@ const QRScannerScreen: React.FC<QRScannerScreenProps> = ({
         onDeny={() => {
           setShowRationale(false);
           setHasPermission(false);
-          recordLoadOnce();
         }}
       />
       <View style={styles.header}>

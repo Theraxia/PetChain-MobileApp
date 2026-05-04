@@ -55,9 +55,15 @@ const PaymentScreen: React.FC = () => {
       const payment = await paymentService.initiatePayment(plan, 'stub');
       const result = await paymentService.confirmPayment(payment.id);
       setSubscription(result.subscription);
-      Alert.alert('Success', `You are now subscribed to ${result.subscription.plan.replace('_', ' ')}!`);
+      Alert.alert(
+        'Success',
+        `You are now subscribed to ${result.subscription.plan.replace('_', ' ')}!`,
+      );
     } catch (err) {
-      Alert.alert('Payment Failed', err instanceof Error ? err.message : 'Unable to process payment.');
+      Alert.alert(
+        'Payment Failed',
+        err instanceof Error ? err.message : 'Unable to process payment.',
+      );
     } finally {
       setProcessing(false);
       setSelectedPlan(null);
@@ -114,15 +120,18 @@ const PaymentScreen: React.FC = () => {
         <View style={styles.activeCard}>
           <Text style={styles.activeTitle}>Current Plan</Text>
           <Text style={styles.activePlan}>
-            {subscription!.plan.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+            {subscription?.plan.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
           </Text>
           <Text style={styles.activePeriod}>
-            Renews: {new Date(subscription!.currentPeriodEnd).toLocaleDateString()}
+            Renews:{' '}
+            {subscription?.currentPeriodEnd
+              ? new Date(subscription.currentPeriodEnd).toLocaleDateString()
+              : ''}
           </Text>
-          {subscription!.cancelAtPeriodEnd && (
+          {subscription?.cancelAtPeriodEnd && (
             <Text style={styles.cancelNotice}>Cancels at period end</Text>
           )}
-          {!subscription!.cancelAtPeriodEnd && (
+          {!subscription?.cancelAtPeriodEnd && (
             <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
               <Text style={styles.cancelButtonText}>Cancel Subscription</Text>
             </TouchableOpacity>
@@ -143,8 +152,7 @@ const PaymentScreen: React.FC = () => {
               <Text style={styles.planName}>{plan.name}</Text>
               <Text style={styles.planDescription}>{plan.description}</Text>
               <Text style={styles.planPrice}>
-                ${plan.priceMonthly.toFixed(2)}{' '}
-                <Text style={styles.planPricePer}>/month</Text>
+                ${plan.priceMonthly.toFixed(2)} <Text style={styles.planPricePer}>/month</Text>
               </Text>
               {plan.id === 'premium_annual' && (
                 <Text style={styles.savingsLabel}>Save 20% vs monthly</Text>

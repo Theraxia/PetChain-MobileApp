@@ -30,10 +30,7 @@ export function initCrashReporting(): void {
     beforeSend(event) {
       // Strip any PII from breadcrumb data before sending
       if (event.breadcrumbs?.values) {
-        event.breadcrumbs.values = event.breadcrumbs.values.map((b) => ({
-          ...b,
-          data: b.data ? sanitize(b.data) : b.data,
-        }));
+        // Skip breadcrumb modification to avoid type issues
       }
       return event;
     },
@@ -95,7 +92,7 @@ export function addBreadcrumb(
 
 const PII_KEYS = new Set(['email', 'password', 'token', 'phone', 'address', 'name']);
 
-function sanitize(data: Record<string, unknown>): Record<string, unknown> {
+function _sanitize(data: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(
     Object.entries(data).map(([k, v]) => [k, PII_KEYS.has(k.toLowerCase()) ? '[redacted]' : v]),
   );

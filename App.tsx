@@ -1,13 +1,18 @@
 import * as Sentry from '@sentry/react-native';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 
 import './src/i18n';
 import OfflineIndicator from './src/components/OfflineIndicator';
-import UpdatePrompt from './src/components/UpdatePrompt';
 import { useSplashGuard } from './src/components/SplashGuard';
+import UpdatePrompt from './src/components/UpdatePrompt';
 import { PetProvider } from './src/context/PetContext';
+import AppNavigator from './src/navigation/AppNavigator';
 import crashReporting from './src/services/crashReporting';
+import {
+  registerNotificationActions,
+  watchNotificationActions,
+} from './src/services/notificationService';
 import updateService from './src/services/updateService';
 
 // Initialise Sentry before the first render

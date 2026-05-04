@@ -19,8 +19,15 @@ interface Props {
  *
  * Optionally includes a "Verify" button to trigger on-chain verification.
  */
-export const VerificationBadge: React.FC<Props> = ({ status = 'unknown', onVerifyPress, showButton = false }) => {
-  const config: Record<VerificationStatus, { icon: string; color: string; bg: string; label: string }> = {
+export const VerificationBadge: React.FC<Props> = ({
+  status = 'unknown',
+  onVerifyPress,
+  showButton = false,
+}) => {
+  const config: Record<
+    VerificationStatus,
+    { icon: string; color: string; bg: string; label: string }
+  > = {
     verified: { icon: '✓', color: '#fff', bg: '#10B981', label: 'Verified' },
     failed: { icon: '✕', color: '#fff', bg: '#EF4444', label: 'Verification Failed' },
     pending: { icon: '⏳', color: '#fff', bg: '#F59E0B', label: 'Pending' },
@@ -35,7 +42,11 @@ export const VerificationBadge: React.FC<Props> = ({ status = 'unknown', onVerif
         <Text style={[styles.icon, { color }]}>{icon}</Text>
       </View>
       {showButton && status !== 'verified' && (
-        <TouchableOpacity style={styles.verifyBtn} onPress={onVerifyPress} accessibilityRole="button">
+        <TouchableOpacity
+          style={styles.verifyBtn}
+          onPress={onVerifyPress}
+          accessibilityRole="button"
+        >
           <Text style={styles.verifyBtnText}>Verify on Chain</Text>
         </TouchableOpacity>
       )}

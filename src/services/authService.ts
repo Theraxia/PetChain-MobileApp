@@ -9,7 +9,6 @@ import type {
 } from '../../backend/types/api';
 import { API_ENDPOINTS } from '../../backend/types/api';
 import config from '../config';
-import { logError } from '../utils/errorLogger';
 import {
   authenticateWithBiometricGate,
   clearSecureTokens,
@@ -22,6 +21,7 @@ import {
   isBiometricAuthenticationEnabled as isBiometricStorageEnabled,
   storeSecureTokens,
 } from '../utils/encryption/keychain';
+import { logError } from '../utils/errorLogger';
 
 // ─── Custom error ─────────────────────────────────────────────────────────────
 
@@ -114,7 +114,7 @@ function decodeJwtPayload(token: string): JwtPayload {
   }
 }
 
-function isTokenExpired(token: string): boolean {
+function _isTokenExpired(token: string): boolean {
   try {
     const { exp } = decodeJwtPayload(token);
     return Date.now() / 1000 >= exp - 30;
@@ -250,5 +250,65 @@ export async function refreshToken(): Promise<string> {
     logError(err as Error, { service: 'authService', action: 'refresh_token' });
 
     throw new AuthError('Token refresh failed', 'REFRESH_FAILED');
+  }
+}
+
+export async function logout(): Promise<void> {
+  await clearSecureTokens();
+}
+
+export async function verifyEmail(_token: string): Promise<void> {
+  // Placeholder — implement when backend endpoint is available
+  throw new AuthError('Email verification not yet implemented', 'NOT_IMPLEMENTED');
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  try {
+    await authClient.post('/auth/forgot-password', { email });
+  } catch (err) {
+    logError(err as Error, { service: 'authService', action: 'request_password_reset' });
+    throw new AuthError('Failed to send password reset email', 'RESET_FAILED');
+  }
+}
+
+export async function resetPassword(_token: string, _newPassword: string): Promise<void> {
+  throw new AuthError('Password reset not yet implemented', 'NOT_IMPLEMENTED');
+}
+
+export async function isBiometricAuthenticationAvailable(): Promise<boolean> {
+  const availability = await getBiometricAvailability();
+  return availability.isAvailable;
+}
+
+export async function isBiometricAuthenticationEnabled(): Promise<boolean> {
+  return isBiometricStorageEnabled();
+}
+
+export async function disableBiometricAuthentication(): Promise<void> {
+  await disableBiometricStorage();
+}
+
+export async function promptForBiometricSetup(): Promise<boolean> {
+  try {
+    await enableBiometricStorage();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function getStoredToken(): Promise<string | null> {
+  return getSecureToken();
+}
+
+export async function getStoredTokens(): Promise<StoredSession | null> {
+  return getSecureTokens();
+}
+
+export async function authenticateWithBiometric(): Promise<boolean> {
+  try {
+    return await authenticateWithBiometricGate('Authenticate to access PetChain');
+  } catch {
+    return false;
   }
 }

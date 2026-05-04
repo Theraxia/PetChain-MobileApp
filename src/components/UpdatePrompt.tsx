@@ -22,13 +22,7 @@ interface Props {
   visible: boolean;
 }
 
-export default function UpdatePrompt({
-  variant,
-  onUpdate,
-  storeUrl,
-  onDismiss,
-  visible,
-}: Props) {
+export default function UpdatePrompt({ variant, onUpdate, storeUrl, onDismiss, visible }: Props) {
   const isForce = variant === 'force';
 
   // Prevent Android back-button from dismissing a force-update modal
@@ -56,9 +50,7 @@ export default function UpdatePrompt({
     >
       <View style={styles.overlay}>
         <View style={styles.card}>
-          <Text style={styles.title}>
-            {isForce ? 'Update Required' : 'Update Available'}
-          </Text>
+          <Text style={styles.title}>{isForce ? 'Update Required' : 'Update Available'}</Text>
           <Text style={styles.body}>
             {isForce
               ? 'A critical update is required to continue using PetChain. Please update the app from the store.'
@@ -106,11 +98,22 @@ const styles = StyleSheet.create({
     maxWidth: 360,
     alignItems: 'center',
     ...Platform.select({
-      ios: { shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } },
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 4 },
+      },
       android: { elevation: 8 },
     }),
   },
-  title: { fontSize: 20, fontWeight: '700', color: '#1a1a1a', marginBottom: 10, textAlign: 'center' },
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1a1a1a',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
   body: { fontSize: 14, color: '#555', textAlign: 'center', lineHeight: 20, marginBottom: 24 },
   primaryBtn: {
     backgroundColor: '#4A90A4',

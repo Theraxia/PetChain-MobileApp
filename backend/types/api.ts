@@ -1,7 +1,7 @@
 /**
  * Generic API response wrapper for successful responses
  */
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: true;
   data: T;
   message?: string;
@@ -16,7 +16,7 @@ export interface ApiError {
   error: {
     code: string;
     message: string;
-    details?: Record<string, any>;
+    details?: Record<string, unknown>;
     stack?: string;
   };
   timestamp: string;
@@ -37,7 +37,7 @@ export interface PaginationMeta {
 /**
  * Paginated response wrapper
  */
-export interface PaginatedResponse<T = any> {
+export interface PaginatedResponse<T = unknown> {
   success: true;
   data: T[];
   pagination: PaginationMeta;
@@ -484,8 +484,8 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 export interface ApiRequestConfig {
   method: HttpMethod;
   endpoint: string;
-  params?: Record<string, any>;
-  data?: any;
+  params?: Record<string, unknown>;
+  data?: unknown;
   headers?: Record<string, string>;
 }
 

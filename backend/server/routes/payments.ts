@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /**
  * Payment routes — FUTURE FEATURE
  * Architecture is in place; actual provider integration is stubbed.
@@ -6,9 +7,9 @@
 import express from 'express';
 
 import { authenticateJWT, type AuthenticatedRequest } from '../../middleware/auth';
-import { ok, sendError } from '../response';
-import paymentService from '../../services/paymentService';
 import type { PaymentProvider, SubscriptionPlan } from '../../models/Payment';
+import paymentService from '../../services/paymentService';
+import { ok, sendError } from '../response';
 
 const router = express.Router();
 
@@ -27,7 +28,11 @@ router.get('/subscription', (req: AuthenticatedRequest, res) => {
 
 // POST /api/payments/initiate — create a pending payment intent
 router.post('/initiate', (req: AuthenticatedRequest, res) => {
-  const { plan, provider } = req.body as { plan?: SubscriptionPlan; provider?: PaymentProvider };
+  const { plan, provider } = req.body as {
+    plan?: SubscriptionPlan;
+    provider?: PaymentProvider;
+    providerTransactionId?: string;
+  };
 
   if (!plan || !provider) {
     return sendError(res, 400, 'VALIDATION_ERROR', 'plan and provider are required');
@@ -40,7 +45,12 @@ router.post('/initiate', (req: AuthenticatedRequest, res) => {
 
   const validProviders: PaymentProvider[] = ['stripe', 'apple_iap', 'google_play', 'stub'];
   if (!validProviders.includes(provider)) {
-    return sendError(res, 400, 'VALIDATION_ERROR', `provider must be one of: ${validProviders.join(', ')}`);
+    return sendError(
+      res,
+      400,
+      'VALIDATION_ERROR',
+      `provider must be one of: ${validProviders.join(', ')}`,
+    );
   }
 
   try {
@@ -48,11 +58,16 @@ router.post('/initiate', (req: AuthenticatedRequest, res) => {
       userId: req.user!.id,
       plan,
       provider,
-      providerTransactionId: req.body.providerTransactionId,
+      providerTransactionId: (req.body as Record<string, string | undefined>).providerTransactionId,
     });
     return res.status(201).json(ok(payment, 'Payment initiated'));
   } catch (err) {
-    return sendError(res, 500, 'PAYMENT_ERROR', err instanceof Error ? err.message : 'Failed to initiate payment');
+    return sendError(
+      res,
+      500,
+      'PAYMENT_ERROR',
+      err instanceof Error ? err.message : 'Failed to initiate payment',
+    );
   }
 });
 
@@ -74,7 +89,12 @@ router.delete('/subscription', (req: AuthenticatedRequest, res) => {
     const sub = paymentService.cancelSubscription(req.user!.id);
     return res.json(ok(sub, 'Subscription will be cancelled at the end of the current period'));
   } catch (err) {
-    return sendError(res, 404, 'NOT_FOUND', err instanceof Error ? err.message : 'Subscription not found');
+    return sendError(
+      res,
+      404,
+      'NOT_FOUND',
+      err instanceof Error ? err.message : 'Subscription not found',
+    );
   }
 });
 

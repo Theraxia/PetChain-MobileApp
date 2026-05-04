@@ -18,7 +18,7 @@ export interface Pet {
 }
 
 /**
- * Factory to safely create a Pet object from raw data, 
+ * Factory to safely create a Pet object from raw data,
  * ensuring all required fields have sensible defaults.
  */
 export const createPet = (data: Partial<Pet>): Pet => ({
@@ -45,15 +45,15 @@ export interface PetFormData {
 
 export const validatePet = (data: Partial<PetFormData>): string[] => {
   const errors: string[] = [];
-  
+
   if (!data.name?.trim()) {
     errors.push('Name is required');
   }
-  
+
   if (!data.species) {
     errors.push('Species is required');
   }
-  
+
   if (data.microchipId && !/^[0-9A-Fa-f]{15}$/.test(data.microchipId)) {
     errors.push('Microchip ID must be 15 hexadecimal characters');
   }
@@ -61,7 +61,7 @@ export const validatePet = (data: Partial<PetFormData>): string[] => {
   if (data.photoUrl && !isValidImageUrl(data.photoUrl)) {
     errors.push('Invalid photo URL format');
   }
-  
+
   return errors;
 };
 

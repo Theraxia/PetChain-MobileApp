@@ -1,8 +1,4 @@
-import {
-  getCloudSyncConfig,
-  updateCloudSyncConfig,
-  toggleEntitySync,
-} from '../cloudSyncService';
+import { getCloudSyncConfig, updateCloudSyncConfig, toggleEntitySync } from '../cloudSyncService';
 
 // Mock localDB
 jest.mock('../localDB', () => ({
@@ -47,9 +43,7 @@ describe('toggleEntitySync', () => {
   beforeEach(() => jest.clearAllMocks());
 
   it('adds entity type when enabled', async () => {
-    getItem.mockResolvedValue(
-      JSON.stringify({ syncedEntities: ['pet', 'appointment'] }),
-    );
+    getItem.mockResolvedValue(JSON.stringify({ syncedEntities: ['pet', 'appointment'] }));
     const updated = await toggleEntitySync('medication', true);
     expect(updated.syncedEntities).toContain('medication');
   });

@@ -85,14 +85,10 @@ const EmergencyCallButton: React.FC<Props> = ({
       return;
     }
 
-    Alert.alert(
-      'Call ' + (label ?? phoneNumber),
-      `Dial ${phoneNumber}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Call', style: 'default', onPress: () => void doCall() },
-      ],
-    );
+    Alert.alert('Call ' + (label ?? phoneNumber), `Dial ${phoneNumber}?`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Call', style: 'default', onPress: () => void doCall() },
+    ]);
   }, [phoneNumber, label, skipConfirm]);
 
   if (compact) {

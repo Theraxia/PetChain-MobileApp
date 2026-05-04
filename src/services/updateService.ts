@@ -1,11 +1,11 @@
-import * as Updates from 'expo-updates';
 import Constants from 'expo-constants';
+import * as Updates from 'expo-updates';
 
 declare const __DEV__: boolean;
 
 export type UpdateStatus =
   | { type: 'up-to-date' }
-  | { type: 'ota-available'; manifest: Updates.UpdateManifest }
+  | { type: 'ota-available'; manifest: unknown }
   | { type: 'force-update'; storeUrl: string }
   | { type: 'error'; message: string };
 
@@ -22,8 +22,7 @@ const MIN_NATIVE_VERSION = {
 const STORE_URLS = {
   ios: extra.IOS_STORE_URL ?? 'https://apps.apple.com/app/petchain/id000000000',
   android:
-    extra.ANDROID_STORE_URL ??
-    'https://play.google.com/store/apps/details?id=app.petchain.mobile',
+    extra.ANDROID_STORE_URL ?? 'https://play.google.com/store/apps/details?id=app.petchain.mobile',
 };
 
 function isVersionLessThan(a: string, b: string): boolean {
@@ -66,7 +65,7 @@ export async function checkForUpdate(): Promise<UpdateStatus> {
     const result = await Updates.checkForUpdateAsync();
     if (result.isAvailable) {
       await Updates.fetchUpdateAsync();
-      return { type: 'ota-available', manifest: result.manifest as Updates.UpdateManifest };
+      return { type: 'ota-available', manifest: result.manifest };
     }
 
     return { type: 'up-to-date' };

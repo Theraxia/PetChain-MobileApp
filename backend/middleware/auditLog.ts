@@ -8,9 +8,9 @@
 
 import type { NextFunction, Response } from 'express';
 
+import type { AuthenticatedRequest } from './auth';
 import type { AuditAction, AuditResourceType } from '../models/AuditLog';
 import auditLogService from '../services/auditLogService';
-import type { AuthenticatedRequest } from './auth';
 
 export interface AuditableRequest extends AuthenticatedRequest {
   audit: (

@@ -256,5 +256,6 @@ export const scanQRCode = (qrData: string): QRScanResult => {
  * @deprecated Use `scanQRCode` instead.
  * Kept for backward compatibility with code that calls validateQRCode.
  */
-export const validateQRCode = (qrData: string): { valid: boolean; petId?: string; error?: string } =>
-  scanQRCode(qrData);
+export const validateQRCode = (
+  qrData: string,
+): { valid: boolean; petId?: string; error?: string } => scanQRCode(qrData);

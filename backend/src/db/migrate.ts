@@ -1,5 +1,7 @@
+/* eslint-disable no-console */
 import fs from 'fs';
 import path from 'path';
+
 import { query, closePool } from './index';
 
 const MIGRATIONS_DIR = path.join(__dirname, '../../migrations');
@@ -57,7 +59,7 @@ export async function migrate(): Promise<void> {
       // Record version if the migration didn't insert it itself
       await query(
         `INSERT INTO schema_migrations (version, name) VALUES ($1, $2) ON CONFLICT (version) DO NOTHING`,
-        [version, file]
+        [version, file],
       );
 
       console.log(`  [done] ${file}`);
@@ -80,9 +82,9 @@ export async function rollback(targetVersion: number): Promise<void> {
     await ensureVersionTable();
     const applied = await getAppliedVersions();
 
-    const toRollback = MIGRATION_FILES
-      .filter((f) => versionFromFilename(f) > targetVersion)
-      .reverse(); // descending order
+    const toRollback = MIGRATION_FILES.filter(
+      (f) => versionFromFilename(f) > targetVersion,
+    ).reverse(); // descending order
 
     for (const file of toRollback) {
       const version = versionFromFilename(file);

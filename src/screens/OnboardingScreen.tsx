@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import ErrorBoundary from '../components/ErrorBoundary';
 import {
   View,
   Text,
@@ -10,9 +9,9 @@ import {
   StatusBar,
   Dimensions,
   Platform,
-  type NativeSyntheticEvent,
-  type NativeScrollEvent,
 } from 'react-native';
+
+import ErrorBoundary from '../components/ErrorBoundary';
 
 const { width } = Dimensions.get('window');
 
@@ -155,7 +154,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, onSkip 
         <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleSkip} accessibilityRole="button" accessibilityLabel="Skip onboarding">
+          <TouchableOpacity
+            onPress={handleSkip}
+            accessibilityRole="button"
+            accessibilityLabel="Skip onboarding"
+          >
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
         </View>

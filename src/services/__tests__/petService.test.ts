@@ -25,10 +25,8 @@ jest.mock('../qrCodeService', () => ({
   scanQRCode: jest.fn(),
 }));
 
-import { AxiosError } from 'axios';
 import apiClient from '../apiClient';
 import { getItem, setItem } from '../localDB';
-import { scanQRCode } from '../qrCodeService';
 import {
   getAllPets,
   getPetById,
@@ -38,6 +36,7 @@ import {
   deletePet,
   PetServiceError,
 } from '../petService';
+import { scanQRCode } from '../qrCodeService';
 
 const mockClient = jest.mocked(apiClient);
 const mockGet = mockClient.get as jest.Mock;
@@ -91,12 +90,16 @@ describe('petService', () => {
 
   it('getPetById surfaces forbidden access as PetServiceError', async () => {
     mockGet.mockRejectedValueOnce(
-      makeAxiosError(403, {
-        error: {
-          code: 'PET_ACCESS_DENIED',
-          message: 'You do not have access to this pet',
+      makeAxiosError(
+        403,
+        {
+          error: {
+            code: 'PET_ACCESS_DENIED',
+            message: 'You do not have access to this pet',
+          },
         },
-      }, 'Forbidden'),
+        'Forbidden',
+      ),
     );
 
     await expect(getPetById('pet-1')).rejects.toMatchObject({

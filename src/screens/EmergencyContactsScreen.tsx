@@ -12,16 +12,14 @@ import {
   View,
 } from 'react-native';
 
+import EmergencyCallButton from '../components/EmergencyCallButton';
+import PetSelectorBar from '../components/PetSelectorBar';
 import SOSButton from '../components/SOSButton';
 import emergencyService, {
   type EmergencyContact,
   type VetClinic,
-} from "../services/emergencyService";
-import SOSButton from "../components/SOSButton";
-import EmergencyCallButton from "../components/EmergencyCallButton";
-import PetSelectorBar from "../components/PetSelectorBar";
-import { useSecureScreen } from "../utils/secureScreen";
-import { formatWeight, formatAddress } from "../utils/localeValues";
+} from '../services/emergencyService';
+import { useSecureScreen } from '../utils/secureScreen';
 
 type Tab = 'contacts' | 'nearby';
 const CONTACT_TYPES: EmergencyContact['type'][] = ['vet', 'clinic', 'emergency', 'poison-control'];
@@ -86,12 +84,13 @@ const EmergencyContactsScreen: React.FC = () => {
     setForm(EMPTY_FORM);
     setModalVisible(true);
   };
-  const openEditModal = (contact: EmergencyContact) => {
+  const openEditModal = useCallback((contact: EmergencyContact) => {
     setEditingContact(contact);
     const { id: _id, ...rest } = contact;
     setForm(rest);
     setModalVisible(true);
-  };
+  }, []);
+
   const closeModal = () => {
     setModalVisible(false);
     setEditingContact(null);
@@ -116,93 +115,94 @@ const EmergencyContactsScreen: React.FC = () => {
     }
   };
 
-  const handleDelete = (contact: EmergencyContact) => {
-    Alert.alert('Delete Contact', `Remove ${contact.name}?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await emergencyService.deleteContact(contact.id);
-          loadContacts();
+  const handleDelete = useCallback(
+    (contact: EmergencyContact) => {
+      Alert.alert('Delete Contact', `Remove ${contact.name}?`, [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await emergencyService.deleteContact(contact.id);
+            loadContacts();
+          },
         },
-      },
-    ]);
-  };
+      ]);
+    },
+    [loadContacts],
+  );
 
-  const renderContact = useCallback(({ item }: { item: EmergencyContact }) => (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={styles.cardInfo}>
-          <Text style={styles.cardName}>{item.name}</Text>
-          <Text style={styles.cardSub}>
-            {item.type}
-            {item.available24h ? " · 24h" : ""}
-          </Text>
-          {item.address ? (
-            <Text style={styles.cardSub}>{item.address}</Text>
-          ) : null}
-          {item.notes ? (
-            <Text style={styles.cardNotes}>{item.notes}</Text>
-          ) : null}
-        </View>
-        <View style={styles.cardActions}>
-          {/* Direct call button — Issue #144/#75 */}
-          <EmergencyCallButton
-            phoneNumber={item.phoneNumber}
-            label={item.name}
-            compact
-            skipConfirm={item.available24h} // skip confirm for 24h emergency contacts
-          />
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.editBtn]}
-            onPress={() => openEditModal(item)}
-            accessibilityLabel={`Edit ${item.name}`}
-          >
-            <Text style={styles.actionBtnText}>✏️</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.deleteBtn]}
-            onPress={() => handleDelete(item)}
-            accessibilityLabel={`Delete ${item.name}`}
-          >
-            <Text style={styles.actionBtnText}>🗑️</Text>
-          </TouchableOpacity>
+  const renderContact = useCallback(
+    ({ item }: { item: EmergencyContact }) => (
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <View style={styles.cardInfo}>
+            <Text style={styles.cardName}>{item.name}</Text>
+            <Text style={styles.cardSub}>
+              {item.type}
+              {item.available24h ? ' · 24h' : ''}
+            </Text>
+            {item.address ? <Text style={styles.cardSub}>{item.address}</Text> : null}
+            {item.notes ? <Text style={styles.cardNotes}>{item.notes}</Text> : null}
+          </View>
+          <View style={styles.cardActions}>
+            {/* Direct call button — Issue #144/#75 */}
+            <EmergencyCallButton
+              phoneNumber={item.phoneNumber}
+              label={item.name}
+              compact
+              skipConfirm={item.available24h} // skip confirm for 24h emergency contacts
+            />
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.editBtn]}
+              onPress={() => openEditModal(item)}
+              accessibilityLabel={`Edit ${item.name}`}
+            >
+              <Text style={styles.actionBtnText}>✏️</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.deleteBtn]}
+              onPress={() => handleDelete(item)}
+              accessibilityLabel={`Delete ${item.name}`}
+            >
+              <Text style={styles.actionBtnText}>🗑️</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     ),
     [openEditModal, handleDelete],
   );
 
-  const renderClinic = useCallback(({ item }: { item: VetClinic }) => (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={styles.cardInfo}>
-          <Text style={styles.cardName}>{item.name}</Text>
-          <Text style={styles.cardSub}>
-            {item.distance !== undefined
-              ? `${item.distance.toFixed(1)} km`
-              : ""}
-            {item.available24h ? " · 24h" : ""}
-            {item.rating ? ` · ⭐ ${item.rating}` : ""}
-          </Text>
-          <Text style={styles.cardSub}>{item.address}</Text>
-        </View>
-        <View style={styles.cardActions}>
-          {/* Direct call button — Issue #144/#75 */}
-          <EmergencyCallButton
-            phoneNumber={item.phoneNumber}
-            label={item.name}
-            compact
-            skipConfirm={item.available24h}
-          />
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.navBtn]}
-            onPress={() => emergencyService.navigateToClinic(item.address)}
-            accessibilityLabel={`Navigate to ${item.name}`}
-          >
-            <Text style={styles.actionBtnText}>🗺️</Text>
-          </TouchableOpacity>
+  const renderClinic = useCallback(
+    ({ item }: { item: VetClinic }) => (
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <View style={styles.cardInfo}>
+            <Text style={styles.cardName}>{item.name}</Text>
+            <Text style={styles.cardSub}>
+              {item.distance !== undefined ? `${item.distance.toFixed(1)} km` : ''}
+              {item.available24h ? ' · 24h' : ''}
+              {item.rating ? ` · ⭐ ${item.rating}` : ''}
+            </Text>
+            <Text style={styles.cardSub}>{item.address}</Text>
+          </View>
+          <View style={styles.cardActions}>
+            {/* Direct call button — Issue #144/#75 */}
+            <EmergencyCallButton
+              phoneNumber={item.phoneNumber}
+              label={item.name}
+              compact
+              skipConfirm={item.available24h}
+            />
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.navBtn]}
+              onPress={() => emergencyService.navigateToClinic(item.address)}
+              accessibilityLabel={`Navigate to ${item.name}`}
+            >
+              <Text style={styles.actionBtnText}>🗺️</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     ),

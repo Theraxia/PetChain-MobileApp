@@ -116,7 +116,7 @@ function unwrapApiData<T>(payload: ApiResponse<T> | T): T {
     typeof payload === 'object' &&
     payload !== null &&
     'success' in payload &&
-    (payload as any).success === true &&
+    (payload as ApiResponse<T>).success === true &&
     'data' in payload
   ) {
     return (payload as ApiResponse<T>).data;
@@ -141,12 +141,11 @@ function petFromQRData(scan: QRScanResult): Pet | null {
   };
 }
 
-// 👉 IMPORTANT FIX: no spread in function call context
-function logPetError(error: Error, context: Record<string, any>) {
+function logPetError(error: Error, context: Record<string, unknown>) {
   logError(error, context);
 }
 
-function toPetServiceError(error: unknown, context: Record<string, any>): PetServiceError {
+function toPetServiceError(error: unknown, context: Record<string, unknown>): PetServiceError {
   if (axios.isAxiosError(error)) {
     const status = error.response?.status;
 
@@ -284,7 +283,7 @@ export async function createPet(data: CreatePetInput): Promise<Pet> {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      await offlineQueue.enqueue('pet', 'create', newPet as any);
+      await offlineQueue.enqueue('pet', 'create', newPet as unknown as Record<string, unknown>);
       await setItem(`${PET_CACHE_PREFIX}${tempId}`, JSON.stringify(newPet));
 
       // Update pets list cache
@@ -361,22 +360,24 @@ export async function deletePet(petId: string): Promise<void> {
   }
 }
 
-export async function uploadPetPhoto(petId: string): Promise<string | null> {
+export async function uploadPetPhoto(
+  petId: string,
+): Promise<{ photoUrl: string; thumbnailUrl: string } | null> {
   try {
     const image = await pickImage();
     if (!image) return null;
 
     const compressed = await compressImage(image.uri);
-    const thumbnail = await generateThumbnail(image.uri);
+    const _thumbnail = await generateThumbnail(image.uri);
 
-    const upload = await uploadToStorage(compressed.uri, petId, thumbnail);
+    const upload = await uploadToStorage(compressed.uri, petId);
 
     await updatePet(petId, {
       photoUrl: upload.url,
       thumbnailUrl: upload.thumbnailUrl,
     });
 
-    return upload.url;
+    return { photoUrl: upload.url, thumbnailUrl: upload.thumbnailUrl };
   } catch (error) {
     throw toPetServiceError(error, {
       action: 'upload_pet_photo',
@@ -384,3 +385,16 @@ export async function uploadPetPhoto(petId: string): Promise<string | null> {
     });
   }
 }
+
+// Default export for screens that import petService as default
+const petService = {
+  getAllPets,
+  getPetById,
+  getPetByQRCode,
+  createPet,
+  updatePet,
+  deletePet,
+  uploadPetPhoto,
+};
+
+export default petService;

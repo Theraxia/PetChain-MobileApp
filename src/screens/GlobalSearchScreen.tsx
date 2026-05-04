@@ -47,7 +47,7 @@ const GlobalSearchScreen: React.FC<Props> = ({ onSelectResult, onQuickAction }) 
   const [recents, setRecents] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const cancelRef = useRef<(() => void) | null>(null);
-  const { isOffline } = useOfflineStatus();
+  const { isOnline } = useOfflineStatus();
 
   // Load recents on mount
   useEffect(() => {
@@ -156,7 +156,7 @@ const GlobalSearchScreen: React.FC<Props> = ({ onSelectResult, onQuickAction }) 
 
   return (
     <View style={styles.container}>
-      {isOffline && (
+      {!isOnline && (
         <View style={styles.offlineBanner}>
           <Text style={styles.offlineText}>Offline — showing local results</Text>
         </View>

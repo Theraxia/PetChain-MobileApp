@@ -57,6 +57,7 @@ describe('getNearbyVetClinics — mock fallback (no API key)', () => {
     const clinics = await emergencyService.getNearbyVetClinics(LAT, LON);
     expect(clinics.length).toBeGreaterThan(0);
     for (let i = 1; i < clinics.length; i++) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       expect(clinics[i].distance!).toBeGreaterThanOrEqual(clinics[i - 1].distance!);
     }
   });
@@ -71,6 +72,7 @@ describe('getNearbyVetClinics — mock fallback (no API key)', () => {
 
   it('filters out clinics beyond the requested radius', async () => {
     const clinics = await emergencyService.getNearbyVetClinics(LAT, LON, 1); // 1 km radius
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     clinics.forEach((c) => expect(c.distance!).toBeLessThanOrEqual(1));
   });
 

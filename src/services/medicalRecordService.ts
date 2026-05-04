@@ -21,6 +21,8 @@ export interface MedicalRecord {
   createdAt: string;
   nextVisitDate?: string;
   documents?: MedicalDocumentMetadata[];
+  isBlockchainVerified?: boolean;
+  verificationStatus?: 'verified' | 'unknown' | 'pending';
 }
 
 export interface Vaccination extends MedicalRecord {
@@ -82,7 +84,7 @@ async function getCachedRecords(petId: string): Promise<MedicalRecord[]> {
 }
 
 // Helper function to handle API errors
-const handleApiError = (error: any): never => {
+const handleApiError = (error: unknown): never => {
   if (axios.isAxiosError(error)) {
     const status = error.response?.status;
     const message = error.response?.data?.message || error.message;
@@ -128,10 +130,15 @@ export const getMedicalRecords = async (
     );
 
     // Enrich records with client-side verificationStatus based on backend's isBlockchainVerified flag
-    const enrichedData = response.data.data.map((record) => ({
-      ...record,
-      verificationStatus: record.isBlockchainVerified ? 'verified' : 'unknown',
-    }));
+    const enrichedData = response.data.data.map(
+      (record: MedicalRecord & { isBlockchainVerified?: boolean }) => ({
+        ...record,
+        verificationStatus: (record.isBlockchainVerified ? 'verified' : 'unknown') as
+          | 'verified'
+          | 'unknown'
+          | 'pending',
+      }),
+    );
 
     return {
       ...response,
@@ -164,7 +171,7 @@ export const getRecordById = async (petId: string, recordId: string): Promise<Me
     );
 
     // Enrich with verificationStatus from isBlockchainVerified flag
-    const record = response.data;
+    const record = response.data as MedicalRecord & { isBlockchainVerified?: boolean };
     return {
       ...record,
       verificationStatus: record.isBlockchainVerified ? 'verified' : 'unknown',
@@ -188,7 +195,7 @@ export const getVaccinationHistory = async (petId: string): Promise<Vaccination[
       type: 'vaccination',
     });
 
-    return response.data as Vaccination[];
+    return response.data.data.filter((record) => record.type === 'vaccination') as Vaccination[];
   } catch (error) {
     if (error instanceof MedicalRecordError) throw error;
     return handleApiError(error);
@@ -205,7 +212,7 @@ export const getTreatmentHistory = async (petId: string): Promise<Treatment[]> =
       type: 'treatment',
     });
 
-    return response.data as Treatment[];
+    return response.data.data.filter((record) => record.type === 'treatment') as Treatment[];
   } catch (error) {
     if (error instanceof MedicalRecordError) throw error;
     return handleApiError(error);
@@ -247,7 +254,7 @@ export const searchMedicalRecords = async (
 
   const { data } = await getMedicalRecords(petId, { limit: 1000 });
   const q = query.trim().toLowerCase();
-  return data.filter((record) => extractSearchableText(record).includes(q));
+  return data.data.filter((record) => extractSearchableText(record).includes(q));
 };
 
 export const createMedicalRecord = async (
@@ -262,9 +269,7 @@ export const createMedicalRecord = async (
 
     // Best-effort blockchain write (do not block UX)
     try {
-      const { tx, hash } = await storeMedicalRecordOnChain(
-        newRecord as MedicalRecordWithChainData,
-      );
+      const { tx, hash } = await storeMedicalRecordOnChain(newRecord as MedicalRecordWithChainData);
       // Enrich record with verification data (client-side)
       newRecord = {
         ...newRecord,
@@ -277,15 +282,12 @@ export const createMedicalRecord = async (
       // Attempt to persist verification fields on the server (admin/vet only).
       // If this fails (e.g., user lacks permission), we keep the fields client-side.
       try {
-        await axios.put(
-          `${API_BASE_URL}/pets/${petId}/medical-records/${newRecord.id}`,
-          {
-            blockchainTxHash: tx.txHash,
-            blockchainHash: hash,
-            isBlockchainVerified: true,
-            blockchainVerifiedAt: tx.createdAt,
-          },
-        );
+        await axios.put(`${API_BASE_URL}/pets/${petId}/medical-records/${newRecord.id}`, {
+          blockchainTxHash: tx.txHash,
+          blockchainHash: hash,
+          isBlockchainVerified: true,
+          blockchainVerifiedAt: tx.createdAt,
+        });
       } catch (updateErr) {
         // Non-critical: client already has verification status for UI.
         console.warn('Could not persist blockchain verification on server:', updateErr);
@@ -312,7 +314,11 @@ export const createMedicalRecord = async (
         verificationStatus: 'unknown',
       } as MedicalRecord;
 
-      await offlineQueue.enqueue('medicalRecord', 'create', newRecord as any);
+      await offlineQueue.enqueue(
+        'medicalRecord',
+        'create',
+        newRecord as unknown as Record<string, unknown>,
+      );
 
       const cached = await getCachedRecords(petId);
       cached.unshift(newRecord);
@@ -377,19 +383,19 @@ export const deleteMedicalRecord = async (petId: string, recordId: string): Prom
       petId,
       cached.filter((r) => r.id !== recordId),
     );
-   } catch (error) {
-     if (axios.isAxiosError(error) && !error.response) {
-       await offlineQueue.enqueue('medicalRecord', 'delete', { id: recordId, petId });
-       const cached = await getCachedRecords(petId);
-       await cacheRecords(
-         petId,
-         cached.filter((r) => r.id !== recordId),
-       );
-       return;
-     }
-     return handleApiError(error);
-   }
- };
+  } catch (error) {
+    if (axios.isAxiosError(error) && !error.response) {
+      await offlineQueue.enqueue('medicalRecord', 'delete', { id: recordId, petId });
+      const cached = await getCachedRecords(petId);
+      await cacheRecords(
+        petId,
+        cached.filter((r) => r.id !== recordId),
+      );
+      return;
+    }
+    return handleApiError(error);
+  }
+};
 
 // =============================
 // Blockchain Verification
@@ -404,9 +410,7 @@ export const deleteMedicalRecord = async (petId: string, recordId: string): Prom
  * @param record - The medical record to verify
  * @returns Integrity result including verified status and on-chain metadata
  */
-export const verifyRecord = async (
-  record: MedicalRecord,
-): Promise<RecordIntegrityResult> => {
+export const verifyRecord = async (record: MedicalRecord): Promise<RecordIntegrityResult> => {
   // Cast to MedicalRecordWithChainData because verification needs full record fields.
   // The record's fields (id, type, date, vetId, diagnosis, treatment, notes, etc.)
   // are all present in the MedicalRecord interface used by the UI.

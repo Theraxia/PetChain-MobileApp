@@ -8,7 +8,7 @@ type ErrorContext = {
   action?: string;
   userId?: string;
   status?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 type LoggedError = {
@@ -47,8 +47,8 @@ export function logError(error: Error, context?: ErrorContext): void {
 }
 
 function sendToService(log: LoggedError, frequency: number): void {
-  crashReporting.captureException(
-    Object.assign(new Error(log.message), { stack: log.stack }),
-    { ...(log.context ?? {}), frequency },
-  );
+  crashReporting.captureException(Object.assign(new Error(log.message), { stack: log.stack }), {
+    ...(log.context ?? {}),
+    frequency,
+  });
 }

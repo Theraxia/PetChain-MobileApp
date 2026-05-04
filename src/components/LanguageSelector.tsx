@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+
 import { SUPPORTED_LANGUAGES, type LanguageCode } from '../i18n';
 
 const LanguageSelector: React.FC = () => {
@@ -17,9 +18,7 @@ const LanguageSelector: React.FC = () => {
             style={[styles.btn, current === code && styles.btnActive]}
             onPress={() => i18n.changeLanguage(code)}
           >
-            <Text style={[styles.btnText, current === code && styles.btnTextActive]}>
-              {label}
-            </Text>
+            <Text style={[styles.btnText, current === code && styles.btnTextActive]}>{label}</Text>
           </TouchableOpacity>
         ))}
       </View>

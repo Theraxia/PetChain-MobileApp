@@ -18,7 +18,7 @@ class LoggerService {
     this.isDevelopment = config.isDevelopment ?? __DEV__;
   }
 
-  private formatLog(level: LogLevel, message: string, data?: any): string {
+  private formatLog(level: LogLevel, message: string, data?: unknown): string {
     const timestamp = new Date().toISOString();
     const dataStr = data ? ` | ${JSON.stringify(data)}` : '';
     return `[${timestamp}] [${level.toUpperCase()}] ${message}${dataStr}`;
@@ -31,7 +31,7 @@ class LoggerService {
     return true;
   }
 
-  private async sendToRemote(level: LogLevel, formattedLog: string, data?: any): Promise<void> {
+  private async sendToRemote(level: LogLevel, formattedLog: string, data?: unknown): Promise<void> {
     // Send to Sentry if it's an error or warning
     if (level === 'error') {
       Sentry.captureException(data instanceof Error ? data : new Error(formattedLog));
@@ -52,28 +52,28 @@ class LoggerService {
     }
   }
 
-  debug(message: string, data?: any): void {
+  debug(message: string, data?: unknown): void {
     if (!this.shouldLog('debug')) return;
     const formatted = this.formatLog('debug', message, data);
-    console.debug(formatted);
+    console.warn(formatted);
     this.sendToRemote('debug', formatted, data);
   }
 
-  info(message: string, data?: any): void {
+  info(message: string, data?: unknown): void {
     if (!this.shouldLog('info')) return;
     const formatted = this.formatLog('info', message, data);
-    console.info(formatted);
+    console.warn(formatted);
     this.sendToRemote('info', formatted, data);
   }
 
-  warn(message: string, data?: any): void {
+  warn(message: string, data?: unknown): void {
     if (!this.shouldLog('warn')) return;
     const formatted = this.formatLog('warn', message, data);
     console.warn(formatted);
     this.sendToRemote('warn', formatted, data);
   }
 
-  error(message: string, data?: any): void {
+  error(message: string, data?: unknown): void {
     if (!this.shouldLog('error')) return;
     const formatted = this.formatLog('error', message, data);
     console.error(formatted);

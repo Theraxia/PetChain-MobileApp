@@ -8,17 +8,10 @@
  *  - Aggregate helpers (e.g. total medication count across all pets)
  */
 
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { getAllPets, type Pet } from '../services/petService';
 import { getItem, setItem } from '../services/localDB';
+import { getAllPets, type Pet } from '../services/petService';
 
 // ─── Per-pet settings ─────────────────────────────────────────────────────────
 

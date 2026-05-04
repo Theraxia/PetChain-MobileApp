@@ -1,10 +1,10 @@
-import { getItem, setItem } from '../services/localDB';
-import type { Migration, MigrationRecord, MigrationResult } from './types';
 import v1 from './scripts/v1_baseline';
 import v2 from './scripts/v2_medication_fields';
 import v3 from './scripts/v3_resilient_init';
 import v4 from './scripts/v4_health_metrics';
 import v5 from './scripts/v5_sync_queue';
+import type { Migration, MigrationRecord, MigrationResult } from './types';
+import { getItem, setItem } from '../services/localDB';
 
 // ─── Registry ─────────────────────────────────────────────────────────────────
 // Add new migrations here in ascending version order.
@@ -44,9 +44,9 @@ export async function runMigrations(): Promise<MigrationResult> {
   const log = await getLog();
   const appliedVersions = new Set(log.map((r) => r.version));
 
-  const pending = ALL_MIGRATIONS
-    .filter((m) => m.version > currentVersion || !appliedVersions.has(m.version))
-    .sort((a, b) => a.version - b.version);
+  const pending = ALL_MIGRATIONS.filter(
+    (m) => m.version > currentVersion || !appliedVersions.has(m.version),
+  ).sort((a, b) => a.version - b.version);
 
   if (pending.length === 0) {
     return { success: true, migrationsRun: 0, currentVersion };
@@ -102,9 +102,9 @@ export async function rollbackTo(targetVersion: number): Promise<MigrationResult
     return { success: true, migrationsRun: 0, currentVersion };
   }
 
-  const toRollback = ALL_MIGRATIONS
-    .filter((m) => m.version > targetVersion && m.version <= currentVersion)
-    .sort((a, b) => b.version - a.version); // descending
+  const toRollback = ALL_MIGRATIONS.filter(
+    (m) => m.version > targetVersion && m.version <= currentVersion,
+  ).sort((a, b) => b.version - a.version); // descending
 
   let lastVersion = currentVersion;
 

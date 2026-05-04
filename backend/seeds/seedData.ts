@@ -1,8 +1,10 @@
+/* eslint-disable no-console */
 import { randomUUID } from 'crypto';
-import { query } from '../src/db';
-import { UserRole } from '../models/UserRole';
+
 import { AppointmentStatus, AppointmentType } from '../models/Appointment';
 import { MedicationFrequency, MedicationStatus } from '../models/Medication';
+import { UserRole } from '../models/UserRole';
+import { query } from '../src/db';
 
 interface SeedConfig {
   numOwners?: number;
@@ -25,7 +27,18 @@ const DEFAULT_CONFIG: Required<SeedConfig> = {
 // Sample data generators
 const FIRST_NAMES = ['John', 'Sarah', 'Michael', 'Emma', 'David', 'Lisa', 'James', 'Anna'];
 const LAST_NAMES = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis'];
-const PET_NAMES = ['Buddy', 'Max', 'Luna', 'Charlie', 'Bella', 'Rocky', 'Daisy', 'Cooper', 'Lucy', 'Milo'];
+const PET_NAMES = [
+  'Buddy',
+  'Max',
+  'Luna',
+  'Charlie',
+  'Bella',
+  'Rocky',
+  'Daisy',
+  'Cooper',
+  'Lucy',
+  'Milo',
+];
 const SPECIES = ['dog', 'cat', 'rabbit', 'bird'];
 const BREEDS: Record<string, string[]> = {
   dog: ['Labrador', 'Golden Retriever', 'German Shepherd', 'Bulldog', 'Poodle', 'Beagle'],
@@ -129,7 +142,7 @@ async function seedUsers(config: Required<SeedConfig>): Promise<Map<string, stri
     await query(
       `INSERT INTO users (id, email, name, phone, role, is_email_verified, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`,
-      [id, email, `${firstName} ${lastName}`, randomPhone(), UserRole.OWNER, true]
+      [id, email, `${firstName} ${lastName}`, randomPhone(), UserRole.OWNER, true],
     );
 
     ownerIds.push(id);
@@ -147,7 +160,7 @@ async function seedUsers(config: Required<SeedConfig>): Promise<Map<string, stri
     await query(
       `INSERT INTO users (id, email, name, phone, role, is_email_verified, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`,
-      [id, email, `Dr. ${firstName} ${lastName}`, randomPhone(), UserRole.VET, true]
+      [id, email, `Dr. ${firstName} ${lastName}`, randomPhone(), UserRole.VET, true],
     );
 
     vetIds.push(id);
@@ -160,7 +173,7 @@ async function seedUsers(config: Required<SeedConfig>): Promise<Map<string, stri
 
 async function seedPets(
   config: Required<SeedConfig>,
-  userIds: Map<string, string>
+  userIds: Map<string, string>,
 ): Promise<Map<string, string>> {
   console.log(`\n🐾 Seeding pets...`);
 
@@ -168,7 +181,8 @@ async function seedPets(
   let petCount = 0;
 
   for (let ownerIdx = 0; ownerIdx < config.numOwners; ownerIdx++) {
-    const ownerId = userIds.get(`owner-${ownerIdx}`)!;
+    const ownerId = userIds.get(`owner-${ownerIdx}`);
+    if (!ownerId) continue;
 
     for (let petIdx = 0; petIdx < config.petsPerOwner; petIdx++) {
       const id = randomUUID();
@@ -181,7 +195,7 @@ async function seedPets(
       await query(
         `INSERT INTO pets (id, name, species, breed, date_of_birth, microchip_id, owner_id, created_at, updated_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())`,
-        [id, name, species, breed, dateOfBirth, microchipId, ownerId]
+        [id, name, species, breed, dateOfBirth, microchipId, ownerId],
       );
 
       petIds.set(`pet-${petCount}`, id);
@@ -196,7 +210,7 @@ async function seedPets(
 async function seedMedicalRecords(
   config: Required<SeedConfig>,
   userIds: Map<string, string>,
-  petIds: Map<string, string>
+  petIds: Map<string, string>,
 ): Promise<void> {
   console.log(`\n📋 Seeding medical records...`);
 
@@ -206,7 +220,8 @@ async function seedMedicalRecords(
     .map(([, id]) => id);
 
   for (let petIdx = 0; petIdx < petIds.size; petIdx++) {
-    const petId = petIds.get(`pet-${petIdx}`)!;
+    const petId = petIds.get(`pet-${petIdx}`);
+    if (!petId) continue;
 
     for (let recordIdx = 0; recordIdx < config.recordsPerPet; recordIdx++) {
       const id = randomUUID();
@@ -222,7 +237,7 @@ async function seedMedicalRecords(
       await query(
         `INSERT INTO medical_records (id, pet_id, vet_id, type, diagnosis, treatment, visit_date, next_visit_date, created_at, updated_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())`,
-        [id, petId, vetId, type, diagnosis, treatment, visitDate, nextVisitDate]
+        [id, petId, vetId, type, diagnosis, treatment, visitDate, nextVisitDate],
       );
 
       recordCount++;
@@ -236,7 +251,7 @@ async function seedMedicalRecords(
 async function seedAppointments(
   config: Required<SeedConfig>,
   userIds: Map<string, string>,
-  petIds: Map<string, string>
+  petIds: Map<string, string>,
 ): Promise<void> {
   console.log(`\n📅 Seeding appointments...`);
 
@@ -246,7 +261,8 @@ async function seedAppointments(
     .map(([, id]) => id);
 
   for (let petIdx = 0; petIdx < petIds.size; petIdx++) {
-    const petId = petIds.get(`pet-${petIdx}`)!;
+    const petId = petIds.get(`pet-${petIdx}`);
+    if (!petId) continue;
 
     for (let apptIdx = 0; apptIdx < config.appointmentsPerPet; apptIdx++) {
       const id = randomUUID();
@@ -263,7 +279,7 @@ async function seedAppointments(
       await query(
         `INSERT INTO appointments (id, pet_id, vet_id, date, time, duration_minutes, type, status, created_at, updated_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())`,
-        [id, petId, vetId, date, time, 30, type, status]
+        [id, petId, vetId, date, time, 30, type, status],
       );
 
       appointmentCount++;
@@ -276,14 +292,15 @@ async function seedAppointments(
 
 async function seedMedications(
   config: Required<SeedConfig>,
-  petIds: Map<string, string>
+  petIds: Map<string, string>,
 ): Promise<void> {
   console.log(`\n💊 Seeding medications...`);
 
   let medicationCount = 0;
 
   for (let petIdx = 0; petIdx < petIds.size; petIdx++) {
-    const petId = petIds.get(`pet-${petIdx}`)!;
+    const petId = petIds.get(`pet-${petIdx}`);
+    if (!petId) continue;
 
     for (let medIdx = 0; medIdx < config.medicationsPerPet; medIdx++) {
       const id = randomUUID();
@@ -300,7 +317,7 @@ async function seedMedications(
       await query(
         `INSERT INTO medications (id, pet_id, name, dosage, frequency, start_date, end_date, status, duration_days, created_at, updated_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())`,
-        [id, petId, name, dosage, frequency, startDate, endDate, status, durationDays]
+        [id, petId, name, dosage, frequency, startDate, endDate, status, durationDays],
       );
 
       medicationCount++;
@@ -311,16 +328,10 @@ async function seedMedications(
   console.log(`  Total medications created: ${medicationCount}`);
 }
 
-async function clearExistingData(): Promise<void> {
+async function _clearExistingData(): Promise<void> {
   console.log('\n🗑️  Clearing existing seed data...');
 
-  const tables = [
-    'medications',
-    'appointments',
-    'medical_records',
-    'pets',
-    'users',
-  ];
+  const tables = ['medications', 'appointments', 'medical_records', 'pets', 'users'];
 
   for (const table of tables) {
     await query(`DELETE FROM ${table} WHERE created_at > NOW() - INTERVAL '1 day'`);
@@ -348,9 +359,15 @@ export async function seed(config: Partial<SeedConfig> = {}): Promise<void> {
     console.log(`\nSummary:`);
     console.log(`  • Users: ${finalConfig.numOwners} owners + ${finalConfig.numVets} vets`);
     console.log(`  • Pets: ${finalConfig.numOwners * finalConfig.petsPerOwner}`);
-    console.log(`  • Medical Records: ${finalConfig.numOwners * finalConfig.petsPerOwner * finalConfig.recordsPerPet}`);
-    console.log(`  • Appointments: ${finalConfig.numOwners * finalConfig.petsPerOwner * finalConfig.appointmentsPerPet}`);
-    console.log(`  • Medications: ${finalConfig.numOwners * finalConfig.petsPerOwner * finalConfig.medicationsPerPet}`);
+    console.log(
+      `  • Medical Records: ${finalConfig.numOwners * finalConfig.petsPerOwner * finalConfig.recordsPerPet}`,
+    );
+    console.log(
+      `  • Appointments: ${finalConfig.numOwners * finalConfig.petsPerOwner * finalConfig.appointmentsPerPet}`,
+    );
+    console.log(
+      `  • Medications: ${finalConfig.numOwners * finalConfig.petsPerOwner * finalConfig.medicationsPerPet}`,
+    );
   } catch (error) {
     console.error('\n❌ Seeding failed:', error);
     throw error;

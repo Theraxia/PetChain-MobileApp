@@ -8,7 +8,6 @@ import { randomUUID } from 'crypto';
 
 import type {
   CreatePaymentInput,
-  CreateSubscriptionInput,
   Payment,
   Subscription,
   SubscriptionPlan,

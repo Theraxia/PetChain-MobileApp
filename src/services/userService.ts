@@ -47,10 +47,7 @@ export async function updateUserProfile(updates: Partial<Omit<User, 'id'>>): Pro
       ...(current.address ?? {}),
       ...(updates.address ?? {}),
     },
-    emergencyContact: {
-      ...(current.emergencyContact ?? {}),
-      ...(updates.emergencyContact ?? {}),
-    },
+    emergencyContact: updates.emergencyContact || current.emergencyContact,
     notificationPreferences: {
       ...current.notificationPreferences,
       ...(updates.notificationPreferences ?? {}),

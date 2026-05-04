@@ -112,7 +112,65 @@ npm run android
 npm start
 ```
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for development workflow.
+See [CONTRIBUTING.md](./docs/CONTRIBUTING.md) for development workflow.
+
+---
+
+## 🌱 Database Seeding
+
+### Quick Setup
+
+```bash
+# 1. Ensure database is running
+# 2. Run migrations
+npm run migrate
+
+# 3. Seed data
+npm run seed:dev
+
+# 4. Verify
+npm test -- backend/seeds/__tests__/seedData.test.ts
+```
+
+### One-Liner Commands
+
+```bash
+# Default seed
+npm run seed
+
+# Development preset
+npm run seed:dev
+
+# Testing preset (minimal data)
+npm run seed:test
+
+# Large dataset
+npm run seed:large
+
+# Custom configuration
+ts-node backend/seeds/index.ts --owners 10 --vets 5 --pets 3 --records 4 --appointments 3 --medications 2
+```
+
+### Configuration Flags
+
+| Flag | Default | Example |
+|------|---------|---------|
+| `--owners` | 5 | `--owners 10` |
+| `--vets` | 3 | `--vets 5` |
+| `--pets` | 2 | `--pets 3` |
+| `--records` | 3 | `--records 5` |
+| `--appointments` | 2 | `--appointments 4` |
+| `--medications` | 1 | `--medications 2` |
+
+### Data Generated
+
+```
+Users:        5 owners + 3 vets = 8 total
+Pets:         5 owners × 2 pets = 10 total
+Records:      10 pets × 3 records = 30 total
+Appointments: 10 pets × 2 appointments = 20 total
+Medications:  10 pets × 1 medication = 10 total
+```
 
 ---
 

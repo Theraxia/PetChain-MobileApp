@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import express from 'express';
 
-import { authenticateJWT, authorizeRoles, type AuthenticatedRequest } from '../../middleware/auth';
 import type { AuditableRequest } from '../../middleware/auditLog';
+import { authenticateJWT, authorizeRoles, type AuthenticatedRequest } from '../../middleware/auth';
 import { UserRole } from '../../models/UserRole';
 import { ok, sendError } from '../response';
 import { store, type StoredMedicalRecord } from '../store';
@@ -39,19 +40,31 @@ router.get('/pet/:petId', (req: AuthenticatedRequest, res) => {
 
   // Only admin, vet, or the owner can view medical records
   if (req.user!.role === UserRole.OWNER && req.user!.id !== pet.ownerId) {
-    return sendError(res, 403, 'FORBIDDEN', 'You do not have permission to view these medical records');
+    return sendError(
+      res,
+      403,
+      'FORBIDDEN',
+      'You do not have permission to view these medical records',
+    );
   }
 
-  const list = [...store.medicalRecords.values()]
-    .filter((r) => r.petId === petId)
-    .map(toApiRecord);
-  (req as AuditableRequest).audit?.('medical_record.accessed', 'medical_record', undefined, { petId });
+  const list = [...store.medicalRecords.values()].filter((r) => r.petId === petId).map(toApiRecord);
+  (req as AuditableRequest).audit?.('medical_record.accessed', 'medical_record', undefined, {
+    petId,
+  });
   return res.json(ok(list));
 });
 
 router.get('/', (req: AuthenticatedRequest, res) => {
-  const { petId, vetId, type, startDate, endDate, diagnosis } = req.query as { petId?: string; vetId?: string; type?: string; startDate?: string; endDate?: string; diagnosis?: string };
-  
+  const { petId, vetId, type, startDate, endDate, diagnosis } = req.query as {
+    petId?: string;
+    vetId?: string;
+    type?: string;
+    startDate?: string;
+    endDate?: string;
+    diagnosis?: string;
+  };
+
   // Owners must provide petId
   if (req.user!.role === UserRole.OWNER && !petId) {
     return sendError(res, 403, 'FORBIDDEN', 'PetId parameter is required for pet owners');
@@ -60,7 +73,12 @@ router.get('/', (req: AuthenticatedRequest, res) => {
   if (petId) {
     const pet = store.pets.get(petId);
     if (pet && req.user!.role === UserRole.OWNER && req.user!.id !== pet.ownerId) {
-      return sendError(res, 403, 'FORBIDDEN', 'You do not have permission to view these medical records');
+      return sendError(
+        res,
+        403,
+        'FORBIDDEN',
+        'You do not have permission to view these medical records',
+      );
     }
   }
 
@@ -70,7 +88,10 @@ router.get('/', (req: AuthenticatedRequest, res) => {
   if (type) list = list.filter((r) => r.type === type);
   if (startDate) list = list.filter((r) => new Date(r.visitDate) >= new Date(startDate));
   if (endDate) list = list.filter((r) => new Date(r.visitDate) <= new Date(endDate));
-  if (diagnosis) list = list.filter((r) => r.diagnosis && r.diagnosis.toLowerCase().includes(diagnosis.toLowerCase()));
+  if (diagnosis)
+    list = list.filter(
+      (r) => r.diagnosis && r.diagnosis.toLowerCase().includes(diagnosis.toLowerCase()),
+    );
   list.sort((a, b) => new Date(b.visitDate).getTime() - new Date(a.visitDate).getTime());
   return res.json(ok(list.map(toApiRecord)));
 });
@@ -78,11 +99,16 @@ router.get('/', (req: AuthenticatedRequest, res) => {
 router.get('/:id', (req: AuthenticatedRequest, res) => {
   const row = store.medicalRecords.get(req.params.id);
   if (!row) return sendError(res, 404, 'NOT_FOUND', 'Medical record not found');
-  
+
   const pet = store.pets.get(row.petId);
   // Only admin, vet, or the owner can view this record
   if (pet && req.user!.role === UserRole.OWNER && req.user!.id !== pet.ownerId) {
-    return sendError(res, 403, 'FORBIDDEN', 'You do not have permission to view this medical record');
+    return sendError(
+      res,
+      403,
+      'FORBIDDEN',
+      'You do not have permission to view this medical record',
+    );
   }
 
   (req as AuditableRequest).audit?.('medical_record.accessed', 'medical_record', row.id);
@@ -91,11 +117,15 @@ router.get('/:id', (req: AuthenticatedRequest, res) => {
 
 // Only Admin and Vet can create, update, or delete medical records
 router.post('/', authorizeRoles(UserRole.ADMIN, UserRole.VET), (req, res) => {
-  const { petId, vetId, type, diagnosis, treatment, notes, visitDate, nextVisitDate } = req.body as Partial<
-    StoredMedicalRecord
-  >;
+  const { petId, vetId, type, diagnosis, treatment, notes, visitDate, nextVisitDate } =
+    req.body as Partial<StoredMedicalRecord>;
   if (!petId?.trim() || !vetId?.trim() || !type?.trim() || !visitDate?.trim()) {
-    return sendError(res, 400, 'VALIDATION_ERROR', 'petId, vetId, type, and visitDate are required');
+    return sendError(
+      res,
+      400,
+      'VALIDATION_ERROR',
+      'petId, vetId, type, and visitDate are required',
+    );
   }
   if (!store.pets.get(petId.trim())) {
     return sendError(res, 400, 'VALIDATION_ERROR', 'petId must reference an existing pet');
@@ -116,7 +146,10 @@ router.post('/', authorizeRoles(UserRole.ADMIN, UserRole.VET), (req, res) => {
     updatedAt: t,
   };
   store.medicalRecords.set(id, row);
-  (req as AuditableRequest).audit?.('medical_record.created', 'medical_record', id, { petId: petId.trim(), type: String(type) });
+  (req as AuditableRequest).audit?.('medical_record.created', 'medical_record', id, {
+    petId: petId.trim(),
+    type: String(type),
+  });
   return res.status(201).json(ok(toApiRecord(row), 'Medical record created'));
 });
 
@@ -138,8 +171,12 @@ router.put('/:id', authorizeRoles(UserRole.ADMIN, UserRole.VET), (req, res) => {
     // Blockchain verification fields (updatable if provided)
     ...(b.blockchainTxHash !== undefined ? { blockchainTxHash: b.blockchainTxHash } : {}),
     ...(b.blockchainHash !== undefined ? { blockchainHash: b.blockchainHash } : {}),
-    ...(b.isBlockchainVerified !== undefined ? { isBlockchainVerified: b.isBlockchainVerified } : {}),
-    ...(b.blockchainVerifiedAt !== undefined ? { blockchainVerifiedAt: b.blockchainVerifiedAt } : {}),
+    ...(b.isBlockchainVerified !== undefined
+      ? { isBlockchainVerified: b.isBlockchainVerified }
+      : {}),
+    ...(b.blockchainVerifiedAt !== undefined
+      ? { blockchainVerifiedAt: b.blockchainVerifiedAt }
+      : {}),
     updatedAt: t,
   };
   store.medicalRecords.set(row.id, next);
@@ -147,12 +184,16 @@ router.put('/:id', authorizeRoles(UserRole.ADMIN, UserRole.VET), (req, res) => {
   return res.json(ok(toApiRecord(next)));
 });
 
-router.delete('/:id', authorizeRoles(UserRole.ADMIN, UserRole.VET), (req: AuthenticatedRequest, res) => {
-  if (!store.medicalRecords.delete(req.params.id)) {
-    return sendError(res, 404, 'NOT_FOUND', 'Medical record not found');
-  }
-  (req as AuditableRequest).audit?.('medical_record.deleted', 'medical_record', req.params.id);
-  return res.json(ok(null, 'Medical record deleted'));
-});
+router.delete(
+  '/:id',
+  authorizeRoles(UserRole.ADMIN, UserRole.VET),
+  (req: AuthenticatedRequest, res) => {
+    if (!store.medicalRecords.delete(req.params.id)) {
+      return sendError(res, 404, 'NOT_FOUND', 'Medical record not found');
+    }
+    (req as AuditableRequest).audit?.('medical_record.deleted', 'medical_record', req.params.id);
+    return res.json(ok(null, 'Medical record deleted'));
+  },
+);
 
 export default router;

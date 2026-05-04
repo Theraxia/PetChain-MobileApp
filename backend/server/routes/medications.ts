@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import express from 'express';
 
 import { authenticateJWT, authorizeRoles, type AuthenticatedRequest } from '../../middleware/auth';
@@ -11,8 +12,8 @@ const router = express.Router();
 router.use(authenticateJWT);
 
 router.get('/', (req: AuthenticatedRequest, res) => {
-  const petId = req.query.petId as string | undefined;
-  
+  const petId = (req.query as Record<string, string | undefined>).petId;
+
   // Owners must provide petId
   if (req.user!.role === UserRole.OWNER && !petId) {
     return sendError(res, 403, 'FORBIDDEN', 'PetId parameter is required for pet owners');
@@ -21,7 +22,12 @@ router.get('/', (req: AuthenticatedRequest, res) => {
   if (petId) {
     const pet = store.pets.get(petId);
     if (pet && req.user!.role === UserRole.OWNER && req.user!.id !== pet.ownerId) {
-      return sendError(res, 403, 'FORBIDDEN', 'You do not have permission to view these medications');
+      return sendError(
+        res,
+        403,
+        'FORBIDDEN',
+        'You do not have permission to view these medications',
+      );
     }
   }
 
@@ -33,7 +39,7 @@ router.get('/', (req: AuthenticatedRequest, res) => {
 router.get('/:id', (req: AuthenticatedRequest, res) => {
   const row = store.medications.get(req.params.id);
   if (!row) return sendError(res, 404, 'NOT_FOUND', 'Medication not found');
-  
+
   const pet = store.pets.get(row.petId);
   if (pet && req.user!.role === UserRole.OWNER && req.user!.id !== pet.ownerId) {
     return sendError(res, 403, 'FORBIDDEN', 'You do not have permission to view this medication');
@@ -45,8 +51,19 @@ router.get('/:id', (req: AuthenticatedRequest, res) => {
 // Admin and Vet can create, update, or delete medications
 router.post('/', authorizeRoles(UserRole.ADMIN, UserRole.VET), (req, res) => {
   const body = req.body as Partial<StoredMedication>;
-  if (!body.petId?.trim() || !body.name?.trim() || !body.dosage?.trim() || !body.frequency?.trim() || !body.startDate?.trim()) {
-    return sendError(res, 400, 'VALIDATION_ERROR', 'petId, name, dosage, frequency, and startDate are required');
+  if (
+    !body.petId?.trim() ||
+    !body.name?.trim() ||
+    !body.dosage?.trim() ||
+    !body.frequency?.trim() ||
+    !body.startDate?.trim()
+  ) {
+    return sendError(
+      res,
+      400,
+      'VALIDATION_ERROR',
+      'petId, name, dosage, frequency, and startDate are required',
+    );
   }
   if (!store.pets.get(body.petId.trim())) {
     return sendError(res, 400, 'VALIDATION_ERROR', 'petId must reference an existing pet');

@@ -1,8 +1,7 @@
 import { getItem, setItem } from './localDB';
-
-import { networkMonitor } from '../utils/networkMonitor';
 import { sendAlertNotification } from './notificationService';
 import syncService, { type SyncAction, type SyncEntityType, type SyncStatus } from './syncService';
+import { networkMonitor } from '../utils/networkMonitor';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

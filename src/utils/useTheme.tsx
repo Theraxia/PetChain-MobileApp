@@ -37,7 +37,8 @@ export const ThemeProvider: React.FC<React.PropsWithChildren<unknown>> = ({ chil
     }
   }, []);
 
-  const theme: 'light' | 'dark' = mode === 'system' ? (systemScheme ?? 'light') : mode;
+  const theme: 'light' | 'dark' =
+    mode === 'system' ? (systemScheme === 'dark' ? 'dark' : 'light') : mode;
 
   const value = useMemo(() => ({ theme, mode, setMode }), [theme, mode, setMode]);
 

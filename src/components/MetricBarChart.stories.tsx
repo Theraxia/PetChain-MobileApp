@@ -1,5 +1,6 @@
-import type { Meta, StoryObj } from '@storybook/react-native';
+import type { Meta, StoryObj } from '@storybook/react';
 import { View } from 'react-native';
+
 import MetricBarChart, { type ChartPoint } from './MetricBarChart';
 
 /**

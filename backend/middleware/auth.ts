@@ -2,7 +2,7 @@ import { type NextFunction, type Request, type Response } from 'express';
 import jwt from 'jsonwebtoken';
 
 import config from '../config';
-import { UserRole } from '../models/UserRole';
+import { type UserRole } from '../models/UserRole';
 import { sendError } from '../server/response';
 import { store } from '../server/store';
 
@@ -11,10 +11,10 @@ import { store } from '../server/store';
  */
 export interface AuthenticatedRequest<
   P = Record<string, string>,
-  ResBody = any,
-  ReqBody = any,
-  ReqQuery = any,
-  Locals extends Record<string, any> = Record<string, any>
+  ResBody = unknown,
+  ReqBody = unknown,
+  ReqQuery = unknown,
+  Locals extends Record<string, unknown> = Record<string, unknown>,
 > extends Request<P, ResBody, ReqBody, ReqQuery, Locals> {
   user?: {
     id: string;
@@ -30,7 +30,12 @@ export const authenticateJWT = (req: AuthenticatedRequest, res: Response, next: 
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith('Bearer ')) {
-    return sendError(res, 401, 'UNAUTHORIZED', 'Authentication required. Please provide a Bearer token.');
+    return sendError(
+      res,
+      401,
+      'UNAUTHORIZED',
+      'Authentication required. Please provide a Bearer token.',
+    );
   }
 
   const token = authHeader.slice(7).trim();
@@ -44,7 +49,7 @@ export const authenticateJWT = (req: AuthenticatedRequest, res: Response, next: 
     if (config.isDev && token.startsWith('mock-')) {
       const userId = token.slice('mock-'.length);
       const user = store.users.get(userId);
-      
+
       if (!user) {
         return sendError(res, 401, 'UNAUTHORIZED', 'Invalid mock token: User not found.');
       }
@@ -89,7 +94,12 @@ export const authorizeRoles = (...roles: UserRole[]) => {
     }
 
     if (!roles.includes(req.user.role)) {
-      return sendError(res, 403, 'FORBIDDEN', `Access denied. Requires one of the following roles: ${roles.join(', ')}`);
+      return sendError(
+        res,
+        403,
+        'FORBIDDEN',
+        `Access denied. Requires one of the following roles: ${roles.join(', ')}`,
+      );
     }
 
     next();

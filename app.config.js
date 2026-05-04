@@ -84,26 +84,28 @@ module.exports = {
         },
       ],
     ],
-     extra: {
-       APP_ENV,
-       API_BASE_URL:
-         process.env.API_BASE_URL ??
-         (APP_ENV === 'production'
-           ? process.env.PROD_API_URL ?? 'https://api.petchain.app/api'
-           : APP_ENV === 'staging'
-           ? process.env.STAGING_API_URL ?? 'https://staging.petchain.app/api'
-           : 'http://localhost:3000/api'),
-       STAGING_API_URL: process.env.STAGING_API_URL ?? 'https://staging.petchain.app/api',
-       PROD_API_URL: process.env.PROD_API_URL ?? 'https://api.petchain.app/api',
-       API_TIMEOUT: process.env.API_TIMEOUT ?? '10000',
-       SENTRY_DSN: process.env.SENTRY_DSN ?? '',
-       SENTRY_ENABLE_IN_DEV: process.env.SENTRY_ENABLE_IN_DEV ?? 'false',
-       MAX_CACHE_SIZE: process.env.MAX_CACHE_SIZE ?? '50',
-       PAGINATION_LIMIT: process.env.PAGINATION_LIMIT ?? '20',
-       IOS_STORE_URL: process.env.IOS_STORE_URL ?? 'https://apps.apple.com/app/petchain/id000000000',
-       ANDROID_STORE_URL: process.env.ANDROID_STORE_URL ?? 'https://play.google.com/store/apps/details?id=app.petchain.mobile',
-       MIN_NATIVE_VERSION_IOS: process.env.MIN_NATIVE_VERSION_IOS ?? '1.0.0',
-       MIN_NATIVE_VERSION_ANDROID: process.env.MIN_NATIVE_VERSION_ANDROID ?? '1.0.0',
-     },
+    extra: {
+      APP_ENV,
+      API_BASE_URL:
+        process.env.API_BASE_URL ??
+        (APP_ENV === 'production'
+          ? (process.env.PROD_API_URL ?? 'https://api.petchain.app/api')
+          : APP_ENV === 'staging'
+            ? (process.env.STAGING_API_URL ?? 'https://staging.petchain.app/api')
+            : 'http://localhost:3000/api'),
+      STAGING_API_URL: process.env.STAGING_API_URL ?? 'https://staging.petchain.app/api',
+      PROD_API_URL: process.env.PROD_API_URL ?? 'https://api.petchain.app/api',
+      API_TIMEOUT: process.env.API_TIMEOUT ?? '10000',
+      SENTRY_DSN: process.env.SENTRY_DSN ?? '',
+      SENTRY_ENABLE_IN_DEV: process.env.SENTRY_ENABLE_IN_DEV ?? 'false',
+      MAX_CACHE_SIZE: process.env.MAX_CACHE_SIZE ?? '50',
+      PAGINATION_LIMIT: process.env.PAGINATION_LIMIT ?? '20',
+      IOS_STORE_URL: process.env.IOS_STORE_URL ?? 'https://apps.apple.com/app/petchain/id000000000',
+      ANDROID_STORE_URL:
+        process.env.ANDROID_STORE_URL ??
+        'https://play.google.com/store/apps/details?id=app.petchain.mobile',
+      MIN_NATIVE_VERSION_IOS: process.env.MIN_NATIVE_VERSION_IOS ?? '1.0.0',
+      MIN_NATIVE_VERSION_ANDROID: process.env.MIN_NATIVE_VERSION_ANDROID ?? '1.0.0',
+    },
   },
 };

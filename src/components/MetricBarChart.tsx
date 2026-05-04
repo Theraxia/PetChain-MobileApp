@@ -1,5 +1,5 @@
-import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 export interface ChartPoint {
   label: string;
@@ -13,7 +13,7 @@ interface Props {
   height?: number;
 }
 
-const MetricBarChart: React.FC<Props> = ({ points, color, unit = "", height = 168 }) => {
+const MetricBarChart: React.FC<Props> = ({ points, color, unit = '', height = 168 }) => {
   if (points.length === 0) {
     return <Text style={styles.empty}>No data points for this metric yet.</Text>;
   }
@@ -53,23 +53,23 @@ const MetricBarChart: React.FC<Props> = ({ points, color, unit = "", height = 16
 
 const styles = StyleSheet.create({
   wrap: { marginVertical: 8 },
-  empty: { color: "#888", fontSize: 14, paddingVertical: 12, textAlign: "center" },
+  empty: { color: '#888', fontSize: 14, paddingVertical: 12, textAlign: 'center' },
   barsRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
     paddingHorizontal: 4,
   },
-  barCol: { flex: 1, alignItems: "center", marginHorizontal: 1 },
-  bar: { width: "78%", borderRadius: 4, minHeight: 6 },
+  barCol: { flex: 1, alignItems: 'center', marginHorizontal: 1 },
+  bar: { width: '78%', borderRadius: 4, minHeight: 6 },
   labelsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: 6,
     paddingHorizontal: 2,
   },
-  barLabel: { flex: 1, fontSize: 9, color: "#666", textAlign: "center" },
-  unitHint: { fontSize: 12, color: "#999", marginTop: 6, textAlign: "right" },
+  barLabel: { flex: 1, fontSize: 9, color: '#666', textAlign: 'center' },
+  unitHint: { fontSize: 12, color: '#999', marginTop: 6, textAlign: 'right' },
 });
 
 export default MetricBarChart;

@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from '@storybook/react-native';
 import { action } from '@storybook/addon-actions';
+import type { Meta, StoryObj } from '@storybook/react';
 import { View } from 'react-native';
+
 import PetAggregateView from './PetAggregateView';
 
 /**

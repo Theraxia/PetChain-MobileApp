@@ -39,22 +39,25 @@ const MedicalRecordSearchScreen: React.FC<Props> = ({ petId, onBack }) => {
     }
   };
 
-  const renderItem = useCallback(({ item }: { item: MedicalRecord }) => (
-    <View style={styles.card} accessibilityRole="text">
-      <View style={styles.cardRow}>
-        <Text style={styles.badge}>{item.type}</Text>
-        <Text style={styles.date}>{new Date(item.date).toLocaleDateString()}</Text>
+  const renderItem = useCallback(
+    ({ item }: { item: MedicalRecord }) => (
+      <View style={styles.card} accessibilityRole="text">
+        <View style={styles.cardRow}>
+          <Text style={styles.badge}>{item.type}</Text>
+          <Text style={styles.date}>{new Date(item.date).toLocaleDateString()}</Text>
+        </View>
+        {item.notes ? <Text style={styles.notes}>{item.notes}</Text> : null}
+        {item.veterinarian ? <Text style={styles.meta}>Vet: {item.veterinarian}</Text> : null}
+        {item.documents?.length ? (
+          <Text style={styles.meta}>
+            {item.documents.length} attachment{item.documents.length === 1 ? '' : 's'}
+          </Text>
+        ) : null}
+        {!offlineStatus?.isOnline ? <Text style={styles.cachedChip}>Cached</Text> : null}
       </View>
-      {item.notes ? <Text style={styles.notes}>{item.notes}</Text> : null}
-      {item.veterinarian ? <Text style={styles.meta}>Vet: {item.veterinarian}</Text> : null}
-      {item.documents?.length ? (
-        <Text style={styles.meta}>
-          {item.documents.length} attachment{item.documents.length === 1 ? '' : 's'}
-        </Text>
-      ) : null}
-      {!offlineStatus?.isOnline ? <Text style={styles.cachedChip}>Cached</Text> : null}
-    </View>
-  ), [offlineStatus?.isOnline]);
+    ),
+    [offlineStatus?.isOnline],
+  );
 
   return (
     <View style={styles.container}>

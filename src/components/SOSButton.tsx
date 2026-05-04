@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,21 +8,34 @@ import {
   Vibration,
   Platform,
 } from 'react-native';
+
 import emergencyService from '../services/emergencyService';
 
 interface SOSButtonProps {
   onSOSSent?: () => void;
-  style?: any;
+  style?: object;
 }
 
 const SOSButton: React.FC<SOSButtonProps> = ({ onSOSSent, style }) => {
   const [isPressing, setIsPressing] = useState(false);
   const [isCountdown, setIsCountdown] = useState(false);
   const [countdown, setCountdown] = useState(3);
-  
+
   const pressAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<number | null>(null);
+
+  const triggerSOS = useCallback(async () => {
+    setIsCountdown(false);
+    setCountdown(3);
+    Vibration.vibrate([0, 500, 200, 500]);
+    try {
+      await emergencyService.triggerSOS('Pet emergency - need immediate help');
+      if (onSOSSent) onSOSSent();
+    } catch (error) {
+      console.error('SOS failed', error);
+    }
+  }, [onSOSSent]);
 
   useEffect(() => {
     if (isCountdown) {
@@ -39,7 +52,7 @@ const SOSButton: React.FC<SOSButtonProps> = ({ onSOSSent, style }) => {
             duration: 500,
             useNativeDriver: true,
           }),
-        ])
+        ]),
       ).start();
 
       const id = setInterval(() => {
@@ -53,29 +66,17 @@ const SOSButton: React.FC<SOSButtonProps> = ({ onSOSSent, style }) => {
           return prev - 1;
         });
       }, 1000);
-      
+
       timerRef.current = id;
     } else {
       pulseAnim.setValue(1);
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current) clearTimeout(timerRef.current);
     }
 
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [isCountdown]);
-
-  const triggerSOS = async () => {
-    setIsCountdown(false);
-    setCountdown(3);
-    Vibration.vibrate([0, 500, 200, 500]); // SOS-like pattern
-    try {
-      await emergencyService.triggerSOS('Pet emergency - need immediate help');
-      if (onSOSSent) onSOSSent();
-    } catch (error) {
-      console.error('SOS failed', error);
-    }
-  };
+  }, [isCountdown, pulseAnim, triggerSOS]);
 
   const handlePressIn = () => {
     setIsPressing(true);
@@ -139,15 +140,8 @@ const SOSButton: React.FC<SOSButtonProps> = ({ onSOSSent, style }) => {
           <Text style={styles.buttonText}>🚨 SOS EMERGENCY</Text>
           <Text style={styles.hintText}>HOLD TO ACTIVATE</Text>
         </View>
-        
-        {isPressing && (
-          <Animated.View 
-            style={[
-              styles.progressBar, 
-              { width: progressWidth }
-            ]} 
-          />
-        )}
+
+        {isPressing && <Animated.View style={[styles.progressBar, { width: progressWidth }]} />}
       </TouchableOpacity>
     </View>
   );

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,7 +12,6 @@ import {
 
 import petService, { type Pet } from '../services/petService';
 import { getPhoto, removePhoto, savePhoto } from '../utils/petPhotoStore';
-import { OptimizedImage } from '../components/OptimizedImage';
 
 interface Props {
   /** Pass a pet to edit; omit for add mode. */
@@ -131,7 +131,12 @@ const PetFormScreen: React.FC<Props> = ({ pet, ownerId = '', onBack, onSaved }) 
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Back">
+        <TouchableOpacity
+          onPress={onBack}
+          style={styles.backBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+        >
           <Text style={styles.backText}>‹ Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{isEdit ? 'Edit Pet' : 'Add Pet'}</Text>
@@ -148,9 +153,19 @@ const PetFormScreen: React.FC<Props> = ({ pet, ownerId = '', onBack, onSaved }) 
 
       <ScrollView contentContainerStyle={styles.content}>
         {/* Photo */}
-        <TouchableOpacity style={styles.photoSection} onPress={handlePhotoAction} accessibilityRole="button" accessibilityLabel={photoUri ? 'Change photo' : 'Add photo'}>
+        <TouchableOpacity
+          style={styles.photoSection}
+          onPress={handlePhotoAction}
+          accessibilityRole="button"
+          accessibilityLabel={photoUri ? 'Change photo' : 'Add photo'}
+        >
           {photoUri ? (
-            <Image source={{ uri: photoUri }} style={styles.photo} accessible accessibilityLabel="Pet photo" />
+            <Image
+              source={{ uri: photoUri }}
+              style={styles.photo}
+              accessible
+              accessibilityLabel="Pet photo"
+            />
           ) : (
             <View style={[styles.photo, styles.photoPlaceholder]}>
               <Text style={styles.photoEmoji}>🐾</Text>

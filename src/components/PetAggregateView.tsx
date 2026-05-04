@@ -87,7 +87,9 @@ const PetAggregateView: React.FC<Props> = ({ onSelectPet }) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>All Pets</Text>
-        <Text style={styles.headerCount}>{totalPets} pet{totalPets !== 1 ? 's' : ''}</Text>
+        <Text style={styles.headerCount}>
+          {totalPets} pet{totalPets !== 1 ? 's' : ''}
+        </Text>
       </View>
 
       <ScrollView

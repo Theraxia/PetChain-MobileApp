@@ -1,5 +1,5 @@
-import type { Migration } from '../types';
 import { executeSql } from '../../services/localDB';
+import type { Migration } from '../types';
 
 /**
  * v5 — Add sync_queue table for offline-first mutation tracking.
@@ -24,9 +24,7 @@ const migration: Migration = {
         updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `);
-    await executeSql(
-      `CREATE INDEX IF NOT EXISTS idx_sq_status ON sync_queue(status)`
-    );
+    await executeSql(`CREATE INDEX IF NOT EXISTS idx_sq_status ON sync_queue(status)`);
   },
 
   async down() {

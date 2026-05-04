@@ -72,7 +72,7 @@ const delay = (attempt: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, BASE_DELAY_MS * 2 ** attempt));
 
 // --- Axios instance ---
-let apiClient: AxiosInstance = axios.create({
+const apiClient: AxiosInstance = axios.create({
   baseURL: config.api.baseUrl,
   timeout: config.api.timeoutMs,
   headers: {

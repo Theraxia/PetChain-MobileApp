@@ -9,7 +9,7 @@ const mockResultSet = {
 };
 
 const mockTx = {
-  executeSql: jest.fn((sql, params, success, error) => {
+  executeSql: jest.fn((sql, params, success, _error) => {
     if (success) success(mockTx, mockResultSet);
     return mockTx;
   }),

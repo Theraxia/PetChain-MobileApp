@@ -10,12 +10,12 @@ import {
 
 import { HeaderOfflineStatus, useOfflineStatus } from '../components/OfflineIndicator';
 import { OptimizedImage } from '../components/OptimizedImage';
+import PetAggregateView from '../components/PetAggregateView';
+import PetSelectorBar from '../components/PetSelectorBar';
 import { RetryError } from '../components/RetryError';
 import SOSButton from '../components/SOSButton';
-import PetSelectorBar from '../components/PetSelectorBar';
-import PetAggregateView from '../components/PetAggregateView';
-import petService, { type Pet } from '../services/petService';
 import { usePetContext } from '../context/PetContext';
+import petService, { type Pet } from '../services/petService';
 import { useRetry } from '../utils/useRetry';
 
 interface Props {
@@ -54,41 +54,44 @@ const PetListScreen: React.FC<Props> = ({ onSelectPet, onAddPet }) => {
     [],
   );
 
-  const renderItem = useCallback(({ item }: { item: Pet }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => onSelectPet(item)}
-      accessibilityRole="button"
-      accessibilityLabel={`${item.name}, ${item.species}`}
-      accessibilityHint="Opens pet details"
-    >
-      {item.photoUrl || item.thumbnailUrl ? (
-        <OptimizedImage
-          uri={item.thumbnailUrl || item.photoUrl || ''}
-          style={styles.avatar}
-          accessibilityLabel={`${item.name} photo`}
-        />
-      ) : (
-        <View style={[styles.avatar, styles.avatarPlaceholder]}>
-          <Text style={styles.avatarEmoji}>🐾</Text>
-        </View>
-      )}
-      <View style={styles.cardInfo}>
-        <Text style={styles.petName}>{item.name}</Text>
-        <Text style={styles.petMeta}>
-          {item.species}
-          {item.breed ? ` · ${item.breed}` : ''}
-        </Text>
-        {item.dateOfBirth && (
-          <Text style={styles.petMeta}>
-            Born: {new Date(item.dateOfBirth).toLocaleDateString()}
-          </Text>
+  const renderItem = useCallback(
+    ({ item }: { item: Pet }) => (
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => onSelectPet(item)}
+        accessibilityRole="button"
+        accessibilityLabel={`${item.name}, ${item.species}`}
+        accessibilityHint="Opens pet details"
+      >
+        {item.photoUrl || item.thumbnailUrl ? (
+          <OptimizedImage
+            uri={item.thumbnailUrl || item.photoUrl || ''}
+            style={styles.avatar}
+            accessibilityLabel={`${item.name} photo`}
+          />
+        ) : (
+          <View style={[styles.avatar, styles.avatarPlaceholder]}>
+            <Text style={styles.avatarEmoji}>🐾</Text>
+          </View>
         )}
-        {!offlineStatus?.isOnline ? <Text style={styles.cachedChip}>Cached</Text> : null}
-      </View>
-      <Text style={styles.chevron}>›</Text>
-    </TouchableOpacity>
-  ), [onSelectPet, offlineStatus?.isOnline]);
+        <View style={styles.cardInfo}>
+          <Text style={styles.petName}>{item.name}</Text>
+          <Text style={styles.petMeta}>
+            {item.species}
+            {item.breed ? ` · ${item.breed}` : ''}
+          </Text>
+          {item.dateOfBirth && (
+            <Text style={styles.petMeta}>
+              Born: {new Date(item.dateOfBirth).toLocaleDateString()}
+            </Text>
+          )}
+          {!offlineStatus?.isOnline ? <Text style={styles.cachedChip}>Cached</Text> : null}
+        </View>
+        <Text style={styles.chevron}>›</Text>
+      </TouchableOpacity>
+    ),
+    [onSelectPet, offlineStatus?.isOnline],
+  );
 
   return (
     <View style={styles.container}>
@@ -144,7 +147,10 @@ const PetListScreen: React.FC<Props> = ({ onSelectPet, onAddPet }) => {
               No pets yet. Add one!
             </Text>
           }
-          onRefresh={() => { void execute(); void refreshPets(); }}
+          onRefresh={() => {
+            void execute();
+            void refreshPets();
+          }}
           refreshing={retryState.loading}
           removeClippedSubviews
           maxToRenderPerBatch={10}

@@ -134,6 +134,18 @@ export interface Appointment {
 
   /** Reason for cancellation, if the appointment was cancelled */
   cancellationReason?: string;
+
+  // ─── UI convenience fields ────────────────────────────────────────────────
+  /** Human-readable title for the appointment (e.g. "Annual Checkup") */
+  title?: string;
+  /** Name of the pet (denormalized for display) */
+  petName?: string;
+  /** Name of the vet (denormalized for display) */
+  vetName?: string;
+  /** Location of the appointment */
+  location?: string;
+  /** Notification ID for cancellation */
+  notificationId?: string;
 }
 
 export type CreateAppointmentPayload = Omit<

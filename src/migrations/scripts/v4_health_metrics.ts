@@ -1,5 +1,5 @@
-import type { Migration } from '../types';
 import { executeSql } from '../../services/localDB';
+import type { Migration } from '../types';
 
 /**
  * v4 — Ensure health_metrics index exists.
@@ -11,9 +11,7 @@ const migration: Migration = {
   description: 'Add index on health_metrics(pet_id)',
 
   async up() {
-    await executeSql(
-      `CREATE INDEX IF NOT EXISTS idx_hm_pet_id ON health_metrics(pet_id)`
-    );
+    await executeSql(`CREATE INDEX IF NOT EXISTS idx_hm_pet_id ON health_metrics(pet_id)`);
   },
 
   async down() {

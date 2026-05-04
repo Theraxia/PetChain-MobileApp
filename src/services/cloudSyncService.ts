@@ -1,7 +1,6 @@
 import apiClient from './apiClient';
 import { getItem, setItem } from './localDB';
-import { logError } from '../utils/errorLogger';
-import { SyncEntityType } from './syncService';
+import { type SyncEntityType } from './syncService';
 
 // ─────────────────────────────────────────────────────────────
 // TYPES
@@ -117,10 +116,7 @@ export async function createBackup(
 // RESTORE
 // ─────────────────────────────────────────────────────────────
 
-export async function restoreFromBackup(
-  userId: string,
-  backupId: string,
-): Promise<RestoreResult> {
+export async function restoreFromBackup(userId: string, backupId: string): Promise<RestoreResult> {
   const response = await apiClient.post<RestoreResult>('/cloud-sync/restore', {
     userId,
     backupId,

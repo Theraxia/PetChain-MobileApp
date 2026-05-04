@@ -1,5 +1,5 @@
-import apiClient from '../apiClient';
 import config from '../../config';
+import apiClient from '../apiClient';
 
 describe('API Versioning Header', () => {
   it('should include X-API-Version header in the default axios instance', () => {

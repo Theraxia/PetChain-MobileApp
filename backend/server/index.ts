@@ -4,6 +4,6 @@ const PORT = Number(process.env.PORT) || 3000;
 const app = createApp();
 
 app.listen(PORT, () => {
-  console.log(`PetChain REST API listening on http://localhost:${PORT}/api`);
-  console.log(`Health check: http://localhost:${PORT}/api/health`);
+  console.warn(`PetChain REST API listening on http://localhost:${PORT}/api`);
+  console.warn(`Health check: http://localhost:${PORT}/api/health`);
 });

@@ -326,8 +326,8 @@ class EmergencyService {
         ...clinic,
         distance: this.calculateDistance(latitude, longitude, clinic.latitude, clinic.longitude),
       }))
-      .filter((clinic) => clinic.distance! <= radiusKm)
-      .sort((a, b) => a.distance! - b.distance!);
+      .filter((clinic) => (clinic.distance ?? Infinity) <= radiusKm)
+      .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
   }
 
   // ── SOS ──────────────────────────────────────────────────────────────────────

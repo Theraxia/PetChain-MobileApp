@@ -29,7 +29,7 @@ import {
 import { getUserProfile, saveUserProfile, updateUserProfile } from '../services/userService';
 import { useAppTheme } from '../theme';
 import { formatAddress } from '../utils/localeValues';
-import { useTheme } from '../utils/useTheme';
+import { useTheme, type ThemeMode } from '../utils/useTheme';
 
 // ─── App version info ─────────────────────────────────────────────────────────
 // Pulled from expo-constants at runtime; fallback to package values.
@@ -222,7 +222,7 @@ const SettingsScreen: React.FC<Props> = ({ onLogout }) => {
         },
       };
 
-      const savedProfile = profile
+      const savedProfile = _profile
         ? await updateUserProfile(updates)
         : await saveUserProfile({
             id: `user_${Date.now()}`,
@@ -547,7 +547,7 @@ const SettingsScreen: React.FC<Props> = ({ onLogout }) => {
               </Text>
               {themeMode === option && <Text style={styles.checkmark}>✓</Text>}
             </TouchableOpacity>
-            {idx < arr.length - 1 && <RowSeparator style={{ backgroundColor: colors.border }} />}
+            {idx < arr.length - 1 && <RowSeparator />}
           </React.Fragment>
         ))}
       </View>

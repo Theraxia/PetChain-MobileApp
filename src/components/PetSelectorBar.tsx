@@ -63,9 +63,7 @@ const PetSelectorBar: React.FC<Props> = ({ onAddPet }) => {
                         ? '🐰'
                         : '🐾'}
               </Text>
-              <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
-                {pet.name}
-              </Text>
+              <Text style={[styles.chipText, isActive && styles.chipTextActive]}>{pet.name}</Text>
             </TouchableOpacity>
           );
         })}

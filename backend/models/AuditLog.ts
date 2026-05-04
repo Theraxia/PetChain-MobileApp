@@ -22,12 +22,7 @@ export type AuditAction =
   | 'medication.updated'
   | 'medication.deleted';
 
-export type AuditResourceType =
-  | 'user'
-  | 'pet'
-  | 'medical_record'
-  | 'appointment'
-  | 'medication';
+export type AuditResourceType = 'user' | 'pet' | 'medical_record' | 'appointment' | 'medication';
 
 export interface AuditLog {
   id: string;

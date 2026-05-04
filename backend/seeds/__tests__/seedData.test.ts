@@ -1,5 +1,5 @@
-import { seed } from '../seedData';
 import { query, closePool } from '../../src/db';
+import { seed } from '../seedData';
 
 describe('Seed Data', () => {
   beforeAll(async () => {
@@ -97,7 +97,14 @@ describe('Seed Data', () => {
       return;
     }
 
-    const validStatuses = ['PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED', 'NO_SHOW', 'RESCHEDULED'];
+    const validStatuses = [
+      'PENDING',
+      'CONFIRMED',
+      'CANCELLED',
+      'COMPLETED',
+      'NO_SHOW',
+      'RESCHEDULED',
+    ];
     const appointmentsResult = await query('SELECT DISTINCT status FROM appointments');
 
     appointmentsResult.rows.forEach((row) => {
@@ -127,25 +134,25 @@ describe('Seed Data', () => {
 
     // Verify all pets have valid owner_id references
     const orphanPetsResult = await query(
-      'SELECT COUNT(*) as count FROM pets WHERE owner_id NOT IN (SELECT id FROM users)'
+      'SELECT COUNT(*) as count FROM pets WHERE owner_id NOT IN (SELECT id FROM users)',
     );
     expect(orphanPetsResult.rows[0].count).toBe(0);
 
     // Verify all medical records have valid pet_id and vet_id references
     const orphanRecordsResult = await query(
-      'SELECT COUNT(*) as count FROM medical_records WHERE pet_id NOT IN (SELECT id FROM pets) OR vet_id NOT IN (SELECT id FROM users)'
+      'SELECT COUNT(*) as count FROM medical_records WHERE pet_id NOT IN (SELECT id FROM pets) OR vet_id NOT IN (SELECT id FROM users)',
     );
     expect(orphanRecordsResult.rows[0].count).toBe(0);
 
     // Verify all appointments have valid pet_id and vet_id references
     const orphanAppointmentsResult = await query(
-      'SELECT COUNT(*) as count FROM appointments WHERE pet_id NOT IN (SELECT id FROM pets) OR vet_id NOT IN (SELECT id FROM users)'
+      'SELECT COUNT(*) as count FROM appointments WHERE pet_id NOT IN (SELECT id FROM pets) OR vet_id NOT IN (SELECT id FROM users)',
     );
     expect(orphanAppointmentsResult.rows[0].count).toBe(0);
 
     // Verify all medications have valid pet_id references
     const orphanMedicationsResult = await query(
-      'SELECT COUNT(*) as count FROM medications WHERE pet_id NOT IN (SELECT id FROM pets)'
+      'SELECT COUNT(*) as count FROM medications WHERE pet_id NOT IN (SELECT id FROM pets)',
     );
     expect(orphanMedicationsResult.rows[0].count).toBe(0);
   });

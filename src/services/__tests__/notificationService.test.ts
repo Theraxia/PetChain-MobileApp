@@ -1,5 +1,6 @@
-import { getItem, setItem, removeItem } from '../localDB';
 import * as Notifications from 'expo-notifications';
+
+import { getItem, setItem } from '../localDB';
 import {
   requestPermissions,
   checkPermissions,
@@ -44,7 +45,9 @@ describe('notificationService', () => {
     });
 
     it('should request permissions if not granted', async () => {
-      (Notifications.getPermissionsAsync as jest.Mock).mockResolvedValue({ status: 'undetermined' });
+      (Notifications.getPermissionsAsync as jest.Mock).mockResolvedValue({
+        status: 'undetermined',
+      });
       (Notifications.requestPermissionsAsync as jest.Mock).mockResolvedValue({ status: 'granted' });
       expect(await requestPermissions()).toBe(true);
       expect(Notifications.requestPermissionsAsync).toHaveBeenCalled();
@@ -63,7 +66,7 @@ describe('notificationService', () => {
       await savePreferences({ medicationReminders: false });
       expect(setItem).toHaveBeenCalledWith(
         '@notification_preferences',
-        expect.stringContaining('"medicationReminders":false')
+        expect.stringContaining('"medicationReminders":false'),
       );
     });
   });
@@ -86,7 +89,7 @@ describe('notificationService', () => {
       expect(Notifications.scheduleNotificationAsync).toHaveBeenCalled();
       expect(setItem).toHaveBeenCalledWith(
         '@notification_map',
-        expect.stringContaining('notif-id-123')
+        expect.stringContaining('notif-id-123'),
       );
     });
 
@@ -173,7 +176,7 @@ describe('notificationService', () => {
             type: 'date',
             date: new Date(futureDate),
           }),
-        })
+        }),
       );
     });
 
@@ -184,7 +187,7 @@ describe('notificationService', () => {
       };
 
       await expect(scheduleFutureNotification(pastNotification)).rejects.toThrow(
-        'Scheduled date must be in the future'
+        'Scheduled date must be in the future',
       );
     });
 

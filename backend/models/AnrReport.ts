@@ -1,12 +1,9 @@
-import { UserRole } from "./UserRole";
-import { AnrReportValidator } from "../utils/anrValidators";
-
 /**
  * ANR/Hang monitoring report payload from mobile clients.
  */
 export interface AnrReportPayload {
-  platform: "android" | "ios";
-  type: "anr" | "hang";
+  platform: 'android' | 'ios';
+  type: 'anr' | 'hang';
   timestamp: string; // ISO 8601 timestamp
   threadName: string;
   stackTrace: string;
@@ -53,8 +50,8 @@ export interface UpdateAnrReportInput {
  * ANR report query filters.
  */
 export interface AnrReportFilters {
-  platform?: "android" | "ios";
-  type?: "anr" | "hang";
+  platform?: 'android' | 'ios';
+  type?: 'anr' | 'hang';
   appVersion?: string;
   osVersion?: string;
   processed?: boolean;
@@ -95,7 +92,7 @@ export interface IAnrReportService {
 /**
  * ANR report validation utilities.
  */
-export { AnrReportValidator } from "../utils/anrValidators";
+export { AnrReportValidator } from '../utils/anrValidators';
 
 /**
  * ANR report processing utilities.
@@ -103,9 +100,9 @@ export { AnrReportValidator } from "../utils/anrValidators";
 export class AnrReportProcessor {
   /**
    * Extract potential root cause from stack trace.
-  */
+   */
   static extractRootCause(stackTrace: string): string | null {
-    const lines = stackTrace.split("\n").filter(line => line.trim());
+    const lines = stackTrace.split('\n').filter((line) => line.trim());
 
     // Look for common blocking patterns
     const blockingPatterns = [
@@ -143,7 +140,7 @@ export class AnrReportProcessor {
       if (!groups.has(key)) {
         groups.set(key, []);
       }
-      groups.get(key)!.push(report);
+      groups.get(key)?.push(report);
     }
 
     return groups;
@@ -151,7 +148,7 @@ export class AnrReportProcessor {
 
   private static generateSimilarityKey(stackTrace: string): string {
     // Simple similarity: hash of first 3 stack frames
-    const lines = stackTrace.split("\n").slice(0, 3).join("\n");
+    const lines = stackTrace.split('\n').slice(0, 3).join('\n');
     return this.simpleHash(lines);
   }
 
@@ -159,7 +156,7 @@ export class AnrReportProcessor {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return hash.toString();

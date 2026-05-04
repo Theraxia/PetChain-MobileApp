@@ -7,6 +7,7 @@ import {
 
 import { applySchemaMapping } from './schemaMapper';
 import { getItem, setItem, removeItem } from '../services/localDB';
+import { recordApiTiming } from '../services/performanceService';
 
 const ACCESS_TOKEN_KEY = '@access_token';
 const REFRESH_TOKEN_KEY = '@refresh_token';

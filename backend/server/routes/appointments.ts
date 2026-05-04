@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import express from 'express';
 
 import { authenticateJWT, type AuthenticatedRequest } from '../../middleware/auth';
@@ -20,8 +21,8 @@ function toResponse(a: StoredAppointment) {
 router.use(authenticateJWT);
 
 router.get('/', (req: AuthenticatedRequest, res) => {
-  const petId = req.query.petId as string | undefined;
-  const vetId = req.query.vetId as string | undefined;
+  const petId = (req.query as Record<string, string | undefined>).petId;
+  const vetId = (req.query as Record<string, string | undefined>).vetId;
 
   // Owners must provide petId
   if (req.user!.role === UserRole.OWNER && !petId) {
@@ -31,10 +32,15 @@ router.get('/', (req: AuthenticatedRequest, res) => {
   if (petId) {
     const pet = store.pets.get(petId);
     if (pet && req.user!.role === UserRole.OWNER && req.user!.id !== pet.ownerId) {
-      return sendError(res, 403, 'FORBIDDEN', 'You do not have permission to view these appointments');
+      return sendError(
+        res,
+        403,
+        'FORBIDDEN',
+        'You do not have permission to view these appointments',
+      );
     }
   }
-  
+
   // Vets should see their own appointments if not specified otherwise
   if (req.user!.role === UserRole.VET && !vetId && !petId) {
     // default to showing vet's appointments
@@ -43,9 +49,9 @@ router.get('/', (req: AuthenticatedRequest, res) => {
   let list = [...store.appointments.values()];
   if (petId) list = list.filter((a) => a.petId === petId);
   if (vetId) list = list.filter((a) => a.vetId === vetId);
-  
+
   if (req.user!.role === UserRole.VET && !petId && !vetId) {
-    list = list.filter(a => a.vetId === req.user!.id);
+    list = list.filter((a) => a.vetId === req.user!.id);
   }
 
   list.sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`));
@@ -60,7 +66,7 @@ router.get('/', (req: AuthenticatedRequest, res) => {
 router.get('/:id', (req: AuthenticatedRequest, res) => {
   const row = store.appointments.get(req.params.id);
   if (!row) return sendError(res, 404, 'NOT_FOUND', 'Appointment not found');
-  
+
   // Authorization check
   const pet = store.pets.get(row.petId);
   if (req.user!.role === UserRole.OWNER && pet?.ownerId !== req.user!.id) {
@@ -78,7 +84,7 @@ router.post('/', (req: AuthenticatedRequest, res) => {
   if (!body.petId?.trim() || !body.vetId?.trim() || !body.date?.trim() || !body.time?.trim()) {
     return sendError(res, 400, 'VALIDATION_ERROR', 'petId, vetId, date, and time are required');
   }
-  
+
   const pet = store.pets.get(body.petId.trim());
   if (!pet) {
     return sendError(res, 400, 'VALIDATION_ERROR', 'petId must reference an existing pet');
@@ -111,7 +117,7 @@ router.post('/', (req: AuthenticatedRequest, res) => {
 router.put('/:id', (req: AuthenticatedRequest, res) => {
   const row = store.appointments.get(req.params.id);
   if (!row) return sendError(res, 404, 'NOT_FOUND', 'Appointment not found');
-  
+
   const pet = store.pets.get(row.petId);
   // Authorization: Only owner (for their pet), vet (if assigned), or admin can update
   const isOwner = req.user!.role === UserRole.OWNER && pet?.ownerId === req.user!.id;
@@ -119,7 +125,12 @@ router.put('/:id', (req: AuthenticatedRequest, res) => {
   const isAdmin = req.user!.role === UserRole.ADMIN;
 
   if (!isOwner && !isAssignedVet && !isAdmin) {
-    return sendError(res, 403, 'FORBIDDEN', 'You do not have permission to update this appointment');
+    return sendError(
+      res,
+      403,
+      'FORBIDDEN',
+      'You do not have permission to update this appointment',
+    );
   }
 
   const b = req.body as Partial<StoredAppointment>;
@@ -152,7 +163,12 @@ router.delete('/:id', (req: AuthenticatedRequest, res) => {
   const isAdmin = req.user!.role === UserRole.ADMIN;
 
   if (!isOwner && !isAdmin) {
-    return sendError(res, 403, 'FORBIDDEN', 'You do not have permission to delete this appointment');
+    return sendError(
+      res,
+      403,
+      'FORBIDDEN',
+      'You do not have permission to delete this appointment',
+    );
   }
 
   store.appointments.delete(req.params.id);

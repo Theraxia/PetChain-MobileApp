@@ -1,6 +1,7 @@
-import { getItem, setItem, removeItem } from './localDB';
 import * as Notifications from 'expo-notifications';
 import { Linking } from 'react-native';
+
+import { getItem, setItem, removeItem } from './localDB';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -47,12 +48,22 @@ export interface NotificationPreferences {
   badgeEnabled: boolean;
   quietHoursEnabled: boolean;
   quietHoursStart: string; // "HH:MM"
-  quietHoursEnd: string;   // "HH:MM"
-  petOverrides: { petId: string; medicationReminders?: boolean; appointmentReminders?: boolean; vaccinationAlerts?: boolean }[];
+  quietHoursEnd: string; // "HH:MM"
+  petOverrides: {
+    petId: string;
+    medicationReminders?: boolean;
+    appointmentReminders?: boolean;
+    vaccinationAlerts?: boolean;
+  }[];
 }
 
 export type NotificationCategory = 'medication' | 'appointments' | 'health' | 'general';
-export type NotificationGroup = 'medication' | 'appointment' | 'vaccination' | 'alert' | 'scheduled';
+export type NotificationGroup =
+  | 'medication'
+  | 'appointment'
+  | 'vaccination'
+  | 'alert'
+  | 'scheduled';
 export type NotificationAction = 'open' | 'snooze' | 'mark_as_read';
 
 export const NOTIFICATION_CATEGORIES: NotificationCategory[] = [
@@ -173,7 +184,9 @@ export const registerNotificationActions = async (): Promise<void> => {
 export const markAsRead = async (notificationId: string): Promise<void> => {
   if (!notificationId) return;
   await saveActionState(READ_NOTIFICATIONS_KEY, notificationId, Date.now());
-  await (Notifications as any).dismissNotificationAsync?.(notificationId);
+  await (
+    Notifications as unknown as { dismissNotificationAsync?: (id: string) => Promise<void> }
+  ).dismissNotificationAsync?.(notificationId);
 };
 
 export const snooze = async (
@@ -239,7 +252,8 @@ export const watchNotificationActions = (): ReturnType<
 Notifications.setNotificationHandler({
   handleNotification: async () => {
     const prefs = await getPreferences();
-    const suppressed = prefs.quietHoursEnabled && isQuietHour(prefs.quietHoursStart, prefs.quietHoursEnd);
+    const suppressed =
+      prefs.quietHoursEnabled && isQuietHour(prefs.quietHoursStart, prefs.quietHoursEnd);
     return {
       shouldShowAlert: !suppressed,
       shouldPlaySound: !suppressed && prefs.soundEnabled,
