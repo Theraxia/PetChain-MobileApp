@@ -56,7 +56,12 @@ object ANRWatchdog {
 
     private fun reportAnr(stackTrace: String) {
         Log.e("ANRWatchdog", "Detected ANR:\n$stackTrace")
-        // TODO: send a report to backend
+        // send an HTTP report to the backend monitoring endpoint
+        // Example (Kotlin + OkHttp):
+        // val client = OkHttpClient()
+        // val body = RequestBody.create(MediaType.parse("application/json"), jsonPayload)
+        // val req = Request.Builder().url("${'$'}{API_BASE_URL}/monitoring/anr-report").post(body).build()
+        // client.newCall(req).enqueue(object : Callback { ... })
     }
 
     fun start() {
@@ -132,7 +137,14 @@ final class HangMonitor {
 
     private func reportHang(stackTrace: String) {
         print("[HangMonitor] Detected hang:\n\(stackTrace)")
-        // TODO: send a report to backend
+        // send an HTTP report to the backend monitoring endpoint
+        // Example (Swift + URLSession):
+        // let url = URL(string: "\(API_BASE_URL)/monitoring/anr-report")!
+        // var req = URLRequest(url: url)
+        // req.httpMethod = "POST"
+        // req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        // req.httpBody = jsonData
+        // URLSession.shared.dataTask(with: req).resume()
     }
 }
 ```

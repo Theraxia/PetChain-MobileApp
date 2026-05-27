@@ -40,9 +40,11 @@
     "prepare": "husky",
     "migrate": "ts-node backend/src/db/migrate.ts",
     "seed": "ts-node backend/seeds/index.ts",
-    "seed:dev": "ts-node backend/seeds/index.ts --owners 5 --vets 3 --pets 2 --records 3 --appointments 2 --medications 1",
-    "seed:test": "ts-node backend/seeds/index.ts --owners 2 --vets 1 --pets 1 --records 1 --appointments 1 --medications 1",
-    "seed:large": "ts-node backend/seeds/index.ts --owners 20 --vets 10 --pets 3 --records 5 --appointments 3 --medications 2"
+    "seed:minimal": "ts-node backend/seeds/index.ts --preset minimal",
+    "seed:dev": "ts-node backend/seeds/index.ts --preset standard",
+    "seed:test": "ts-node backend/seeds/index.ts --preset minimal",
+    "seed:large": "ts-node backend/seeds/index.ts --preset large",
+    "seed:clean": "ts-node backend/seeds/index.ts --clean"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [

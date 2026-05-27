@@ -188,11 +188,84 @@ describe('Seed Data', () => {
       recordsPerPet: 0,
       appointmentsPerPet: 0,
       medicationsPerPet: 0,
+      seedBlockchain: false,
     });
 
     const finalUsersResult = await query('SELECT COUNT(*) as count FROM users');
     const finalCount = finalUsersResult.rows[0].count;
 
     expect(finalCount).toBeGreaterThan(initialCount);
+  });
+
+  it('should support preset configurations', async () => {
+    if (!process.env.DATABASE_URL) {
+      console.warn('Skipping test: DATABASE_URL not set');
+      return;
+    }
+
+    await seed({ preset: 'minimal', seedBlockchain: false });
+
+    const ownersResult = await query(
+      "SELECT COUNT(*) as count FROM users WHERE email LIKE '%@seed.petchain.app'",
+    );
+    const vetsResult = await query(
+      "SELECT COUNT(*) as count FROM users WHERE email LIKE '%@vet.seed.petchain.app'",
+    );
+    const petsResult = await query(
+      "SELECT COUNT(*) as count FROM pets WHERE microchip_id LIKE 'SEED-%'",
+    );
+
+    expect(Number(ownersResult.rows[0].count)).toBeGreaterThanOrEqual(2);
+    expect(Number(vetsResult.rows[0].count)).toBeGreaterThanOrEqual(1);
+    expect(Number(petsResult.rows[0].count)).toBeGreaterThanOrEqual(1);
+  });
+
+  it('should anchor seeded records to Stellar testnet and persist blockchain metadata', async () => {
+    if (!process.env.DATABASE_URL) {
+      console.warn('Skipping test: DATABASE_URL not set');
+      return;
+    }
+
+    await seed({ preset: 'minimal', seedBlockchain: true });
+
+    const txResult = await query(
+      `SELECT COUNT(*) as count
+       FROM blockchain_transactions
+       WHERE record_id IN (
+         SELECT id FROM medical_records WHERE notes LIKE '%[SEED DATA]%'
+       )`,
+    );
+    const anchoredRecordsResult = await query(
+      "SELECT COUNT(*) as count FROM medical_records WHERE notes LIKE '%[SEED DATA]%' AND blockchain_tx_hash IS NOT NULL",
+    );
+
+    expect(Number(txResult.rows[0].count)).toBeGreaterThanOrEqual(1);
+    expect(Number(anchoredRecordsResult.rows[0].count)).toBeGreaterThanOrEqual(1);
+  });
+
+  it('should clean seeded demo data safely', async () => {
+    if (!process.env.DATABASE_URL) {
+      console.warn('Skipping test: DATABASE_URL not set');
+      return;
+    }
+
+    await seed({ preset: 'minimal', seedBlockchain: false });
+    await seed({ clean: true });
+
+    const seededUsersResult = await query(
+      `SELECT COUNT(*) as count FROM users
+       WHERE email LIKE '%@seed.petchain.app'
+          OR email LIKE '%@vet.seed.petchain.app'`,
+    );
+    const seededPetsResult = await query(
+      "SELECT COUNT(*) as count FROM pets WHERE microchip_id LIKE 'SEED-%'",
+    );
+    const seededRecordsResult = await query(
+      "SELECT COUNT(*) as count FROM medical_records WHERE notes LIKE '%[SEED DATA]%'",
+    );
+
+    expect(Number(seededUsersResult.rows[0].count)).toBe(0);
+    expect(Number(seededPetsResult.rows[0].count)).toBe(0);
+    expect(Number(seededRecordsResult.rows[0].count)).toBe(0);
   });
 });

@@ -4,6 +4,7 @@ import express, { type Express, type NextFunction, type Request, type Response }
 import { errBody } from './response';
 import { sanitizeInputs } from '../middleware/sanitize';
 import analyticsRouter from './routes/analytics';
+import anrReportRouter from './routes/anrReport';
 import appointmentsRouter from './routes/appointments';
 import auditLogsRouter from './routes/auditLogs';
 import backupsRouter from './routes/backups';
@@ -46,6 +47,7 @@ export function createApp(): Express {
   api.use('/emergency', emergencyRouter);
   api.use('/community', communityRouter);
   api.use('/sync', syncRouter);
+  api.use('/monitoring', anrReportRouter);
 
   app.use('/api', api);
 

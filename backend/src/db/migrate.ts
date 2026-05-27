@@ -14,6 +14,7 @@ const MIGRATION_FILES = [
   '003_audit_log_schema.sql',
   '004_schema_enhancements.sql',
   '005_community_and_health_metrics.sql',
+  '006_blockchain_transactions.sql',
 ];
 
 async function ensureVersionTable(): Promise<void> {

@@ -41,7 +41,14 @@ export class StellarAnchorService {
 
     if (!sourceSecret) {
       const transactionId = `pending:${input.recordId}:${recordHash}`;
-      await this.persistTransaction(input.recordId, recordHash, transactionId, undefined, 'pending', network);
+      await this.persistTransaction(
+        input.recordId,
+        recordHash,
+        transactionId,
+        undefined,
+        'pending',
+        network,
+      );
       return { recordId: input.recordId, recordHash, transactionId, status: 'pending' };
     }
 
@@ -77,7 +84,13 @@ export class StellarAnchorService {
           'submitted',
           network,
         );
-        return { recordId: input.recordId, recordHash, transactionId, ledgerSequence, status: 'submitted' };
+        return {
+          recordId: input.recordId,
+          recordHash,
+          transactionId,
+          ledgerSequence,
+          status: 'submitted',
+        };
       } catch (error) {
         lastError = error;
         await wait(2 ** attempt * 250);
@@ -85,14 +98,27 @@ export class StellarAnchorService {
     }
 
     const transactionId = `failed:${input.recordId}:${Date.now()}`;
-    await this.persistTransaction(input.recordId, recordHash, transactionId, undefined, 'failed', network);
+    await this.persistTransaction(
+      input.recordId,
+      recordHash,
+      transactionId,
+      undefined,
+      'failed',
+      network,
+    );
     throw lastError instanceof Error ? lastError : new Error('Stellar transaction failed');
   }
 
-  async verifyRecord(recordId: string, payload: unknown): Promise<{ verified: boolean; recordHash: string }> {
+  async verifyRecord(
+    recordId: string,
+    payload: unknown,
+  ): Promise<{ verified: boolean; recordHash: string }> {
     const recordHash = this.hashPayload(payload);
     const status = await this.getTransactionStatus(recordId);
-    return { verified: status?.recordHash === recordHash && status.status !== 'failed', recordHash };
+    return {
+      verified: status?.recordHash === recordHash && status.status !== 'failed',
+      recordHash,
+    };
   }
 
   async getTransactionStatus(recordId: string): Promise<AnchorResult | null> {
@@ -141,8 +167,16 @@ export class StellarAnchorService {
       await query(
         `INSERT INTO blockchain_transactions
           (id, record_id, record_hash, transaction_id, ledger_sequence, status, network, created_at, updated_at)
-         VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, NOW(), NOW())`,
-        [recordId, recordHash, transactionId, ledgerSequence ?? null, status, network],
+         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())`,
+        [
+          crypto.randomUUID(),
+          recordId,
+          recordHash,
+          transactionId,
+          ledgerSequence ?? null,
+          status,
+          network,
+        ],
       );
     } catch {
       return;
@@ -155,7 +189,10 @@ function stableStringify(value: unknown): string {
   if (value && typeof value === 'object') {
     return `{${Object.keys(value as Record<string, unknown>)
       .sort()
-      .map((key) => `${JSON.stringify(key)}:${stableStringify((value as Record<string, unknown>)[key])}`)
+      .map(
+        (key) =>
+          `${JSON.stringify(key)}:${stableStringify((value as Record<string, unknown>)[key])}`,
+      )
       .join(',')}}`;
   }
   return JSON.stringify(value);

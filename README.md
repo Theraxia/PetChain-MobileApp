@@ -224,3 +224,36 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 **Status:** Version 1.0.0 — Ready for App Store & Google Play submission.
 
+
+
+Build Data Seeding System for Development and Testing
+Repo Avatar DogStark/PetChain-MobileApp
+
+Description
+Implement a comprehensive data seeding system that generates realistic pet health data for development, testing, and demo environments with configurable data volumes.
+
+Requirements and context
+
+Generate realistic pet names, breeds, medical histories, and medication schedules
+Support configurable data volumes via CLI flags
+    
+Seed blockchain transactions on Stellar testnet for seeded records
+Provide preset configurations: minimal (testing), standard (dev), large (load testing)
+Clean up seeded data without affecting production data
+
+Suggested execution
+
+Branch: feature/data-seeding-system
+Key files: backend/seeds/, backend/seeds/index.ts
+Extend existing seed infrastructure
+Write tests verifying seed data integrity and referential consistency
+
+Guidelines
+
+Assignment required before starting
+PR must include: Closes #50
+Timeframe: 96 hours
+    
+   
+closes 
+#349 

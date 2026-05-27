@@ -4,7 +4,10 @@ import { randomUUID } from 'crypto';
 import { AppointmentStatus, AppointmentType } from '../models/Appointment';
 import { MedicationFrequency, MedicationStatus } from '../models/Medication';
 import { UserRole } from '../models/UserRole';
+import stellarAnchorService from '../services/stellarService';
 import { query } from '../src/db';
+
+type PresetName = 'minimal' | 'standard' | 'large';
 
 interface SeedConfig {
   numOwners?: number;
@@ -13,15 +16,50 @@ interface SeedConfig {
   recordsPerPet?: number;
   appointmentsPerPet?: number;
   medicationsPerPet?: number;
+  preset?: PresetName;
+  seedBlockchain?: boolean;
+  clean?: boolean;
 }
 
+const SEED_OWNER_DOMAIN = 'seed.petchain.app';
+const SEED_VET_DOMAIN = 'vet.seed.petchain.app';
+const SEED_MARKER = '[SEED DATA]';
+
+const PRESET_CONFIGS: Record<
+  PresetName,
+  Required<Omit<SeedConfig, 'preset' | 'seedBlockchain' | 'clean'>>
+> = {
+  minimal: {
+    numOwners: 2,
+    numVets: 1,
+    petsPerOwner: 1,
+    recordsPerPet: 1,
+    appointmentsPerPet: 1,
+    medicationsPerPet: 1,
+  },
+  standard: {
+    numOwners: 5,
+    numVets: 3,
+    petsPerOwner: 2,
+    recordsPerPet: 3,
+    appointmentsPerPet: 2,
+    medicationsPerPet: 1,
+  },
+  large: {
+    numOwners: 20,
+    numVets: 10,
+    petsPerOwner: 3,
+    recordsPerPet: 5,
+    appointmentsPerPet: 3,
+    medicationsPerPet: 2,
+  },
+};
+
 const DEFAULT_CONFIG: Required<SeedConfig> = {
-  numOwners: 5,
-  numVets: 3,
-  petsPerOwner: 2,
-  recordsPerPet: 3,
-  appointmentsPerPet: 2,
-  medicationsPerPet: 1,
+  preset: 'standard',
+  seedBlockchain: true,
+  clean: false,
+  ...PRESET_CONFIGS.standard,
 };
 
 // Sample data generators
@@ -46,6 +84,28 @@ const BREEDS: Record<string, string[]> = {
   rabbit: ['Holland Lop', 'Flemish Giant', 'Angora'],
   bird: ['Parrot', 'Canary', 'Cockatiel'],
 };
+
+const PET_COLORS = ['Brown', 'Black', 'White', 'Tan', 'Gray', 'Golden', 'Cream'];
+const GENDERS = ['male', 'female'];
+const RECORD_NOTES = [
+  'Owner reported improved appetite.',
+  'Follow-up recommended after medication cycle.',
+  'Additional lab work suggested if symptoms persist.',
+  'Patient is recovering well with current treatment.',
+];
+const APPOINTMENT_NOTES = [
+  'Prepare medical history before arrival.',
+  'Owner requested early morning appointment.',
+  'Patient to be fasted prior to visit.',
+  'Follow-up discussed after last visit.',
+];
+const VACCINES = ['Rabies', 'Distemper', 'Parvo', 'Bordetella', 'Leptospirosis'];
+const MEDICATION_INSTRUCTIONS = [
+  'Take with food.',
+  'Apply twice daily.',
+  'Give at the same time each day.',
+  'Do not skip doses.',
+];
 
 const MEDICAL_TYPES = ['checkup', 'vaccination', 'surgery', 'treatment', 'other'];
 const DIAGNOSES = [
@@ -97,7 +157,7 @@ function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function randomEmail(firstName: string, lastName: string, domain: string = 'example.com'): string {
+function _randomEmail(firstName: string, lastName: string, domain: string = 'example.com'): string {
   const suffix = randomInt(100, 999);
   return `${firstName.toLowerCase()}.${lastName.toLowerCase()}${suffix}@${domain}`;
 }
@@ -124,20 +184,38 @@ function randomTime(): string {
   return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
 }
 
+function _buildOwnerEmail(firstName: string, lastName: string): string {
+  return `${firstName.toLowerCase()}.${lastName.toLowerCase()}${randomInt(100, 999)}@${SEED_OWNER_DOMAIN}`;
+}
+
+function _buildVetEmail(firstName: string, lastName: string): string {
+  return `${firstName.toLowerCase()}.${lastName.toLowerCase()}${randomInt(100, 999)}@${SEED_VET_DOMAIN}`;
+}
+
+function randomWeightBySpecies(species: string): number {
+  switch (species) {
+    case 'cat':
+      return parseFloat((randomInt(8, 18) + Math.random()).toFixed(1));
+    case 'rabbit':
+      return parseFloat((randomInt(3, 8) + Math.random()).toFixed(1));
+    case 'bird':
+      return parseFloat((randomInt(0, 3) + Math.random()).toFixed(1));
+    default:
+      return parseFloat((randomInt(20, 90) + Math.random()).toFixed(1));
+  }
+}
+
 // Seed functions
 async function seedUsers(config: Required<SeedConfig>): Promise<Map<string, string>> {
   console.log(`\n📝 Seeding ${config.numOwners} owners and ${config.numVets} vets...`);
 
   const userIds = new Map<string, string>();
-  const ownerIds: string[] = [];
-  const vetIds: string[] = [];
 
-  // Create owners
   for (let i = 0; i < config.numOwners; i++) {
     const id = randomUUID();
     const firstName = randomElement(FIRST_NAMES);
     const lastName = randomElement(LAST_NAMES);
-    const email = randomEmail(firstName, lastName);
+    const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${randomInt(100, 999)}@${SEED_OWNER_DOMAIN}`;
 
     await query(
       `INSERT INTO users (id, email, name, phone, role, is_email_verified, created_at, updated_at)
@@ -145,17 +223,15 @@ async function seedUsers(config: Required<SeedConfig>): Promise<Map<string, stri
       [id, email, `${firstName} ${lastName}`, randomPhone(), UserRole.OWNER, true],
     );
 
-    ownerIds.push(id);
     userIds.set(`owner-${i}`, id);
     console.log(`  ✓ Owner: ${email}`);
   }
 
-  // Create vets
   for (let i = 0; i < config.numVets; i++) {
     const id = randomUUID();
     const firstName = randomElement(FIRST_NAMES);
     const lastName = randomElement(LAST_NAMES);
-    const email = randomEmail(firstName, lastName, 'vetclinic.com');
+    const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${randomInt(100, 999)}@${SEED_VET_DOMAIN}`;
 
     await query(
       `INSERT INTO users (id, email, name, phone, role, is_email_verified, created_at, updated_at)
@@ -163,7 +239,6 @@ async function seedUsers(config: Required<SeedConfig>): Promise<Map<string, stri
       [id, email, `Dr. ${firstName} ${lastName}`, randomPhone(), UserRole.VET, true],
     );
 
-    vetIds.push(id);
     userIds.set(`vet-${i}`, id);
     console.log(`  ✓ Vet: ${email}`);
   }
@@ -190,12 +265,29 @@ async function seedPets(
       const species = randomElement(SPECIES);
       const breed = randomElement(BREEDS[species]);
       const dateOfBirth = randomDate(365 * 10);
-      const microchipId = `CHIP-${randomInt(100000, 999999)}`;
+      const gender = randomElement(GENDERS);
+      const color = randomElement(PET_COLORS);
+      const weight = randomWeightBySpecies(species);
+      const microchipId = `SEED-${randomInt(100000, 999999)}`;
+      const qrCode = `QR-${randomUUID().slice(0, 8)}`;
 
       await query(
-        `INSERT INTO pets (id, name, species, breed, date_of_birth, microchip_id, owner_id, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())`,
-        [id, name, species, breed, dateOfBirth, microchipId, ownerId],
+        `INSERT INTO pets
+         (id, name, species, breed, date_of_birth, microchip_id, gender, color, weight, qr_code, owner_id, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())`,
+        [
+          id,
+          name,
+          species,
+          breed,
+          dateOfBirth,
+          microchipId,
+          gender,
+          color,
+          weight,
+          qrCode,
+          ownerId,
+        ],
       );
 
       petIds.set(`pet-${petCount}`, id);
@@ -233,12 +325,140 @@ async function seedMedicalRecords(
       const nextVisitDate = new Date(new Date(visitDate).getTime() + 365 * 24 * 60 * 60 * 1000)
         .toISOString()
         .split('T')[0];
+      const notes = `${randomElement(RECORD_NOTES)} ${SEED_MARKER}`;
+
+      const diagnosisDetails = {
+        diagnosisText: diagnosis,
+        code: `D${randomInt(100, 999)}`,
+        severity: randomElement(['mild', 'moderate', 'severe', 'unknown']),
+      };
+
+      const treatmentDetails = {
+        treatmentText: treatment,
+        procedureName: randomElement([
+          'Assessment',
+          'X-ray',
+          'Lab work',
+          'Oral exam',
+          'Ultrasound',
+        ]),
+        outcome: randomElement([
+          'Improving',
+          'Stable',
+          'Requires follow-up',
+          'Complete recovery expected',
+        ]),
+      };
+
+      const prescriptions = [
+        {
+          id: randomUUID(),
+          medicationName: randomElement(MEDICATION_NAMES),
+          dosage: `${randomInt(5, 250)}mg`,
+          route: randomElement(['oral', 'topical', 'injection']),
+          frequency: randomElement(['Once daily', 'Twice daily', 'Every 12 hours', 'As needed']),
+          startDate: visitDate,
+          endDate: nextVisitDate,
+          instructions: randomElement(MEDICATION_INSTRUCTIONS),
+        },
+      ];
+
+      const vaccinations =
+        type === 'vaccination'
+          ? [
+              {
+                vaccineName: randomElement(VACCINES),
+                administeredAt: visitDate,
+                nextDueDate: nextVisitDate,
+                manufacturer: randomElement(['VetPharm', 'PetHealth', 'MediVax']),
+                batchNumber: `BATCH-${randomInt(1000, 9999)}`,
+                dose: `${randomInt(1, 2)} ml`,
+              },
+            ]
+          : [];
+
+      const documents = [
+        {
+          id: randomUUID(),
+          name: `${type} summary`,
+          mimeType: 'application/pdf',
+          type: 'pdf',
+          url: `https://example.com/records/${id}.pdf`,
+          sizeBytes: randomInt(25000, 150000),
+          createdAt: visitDate,
+        },
+      ];
 
       await query(
-        `INSERT INTO medical_records (id, pet_id, vet_id, type, diagnosis, treatment, visit_date, next_visit_date, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())`,
-        [id, petId, vetId, type, diagnosis, treatment, visitDate, nextVisitDate],
+        `INSERT INTO medical_records
+         (id, pet_id, vet_id, type, diagnosis, treatment, notes, visit_date, next_visit_date,
+          diagnosis_details, treatment_details, prescriptions, vaccinations, documents,
+          blockchain_tx_hash, is_blockchain_verified, blockchain_verified_at, created_at, updated_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,NOW(),NOW())`,
+        [
+          id,
+          petId,
+          vetId,
+          type,
+          diagnosis,
+          treatment,
+          notes,
+          visitDate,
+          nextVisitDate,
+          JSON.stringify(diagnosisDetails),
+          JSON.stringify(treatmentDetails),
+          JSON.stringify(prescriptions),
+          JSON.stringify(vaccinations),
+          JSON.stringify(documents),
+          null,
+          false,
+          null,
+        ],
       );
+
+      if (config.seedBlockchain) {
+        try {
+          const result = await stellarAnchorService.anchorRecord({
+            recordId: id,
+            payload: {
+              id,
+              petId,
+              vetId,
+              type,
+              diagnosis,
+              treatment,
+              notes,
+              visitDate,
+              nextVisitDate,
+              diagnosisDetails,
+              treatmentDetails,
+              prescriptions,
+              vaccinations,
+              documents,
+            },
+            network: 'testnet',
+          });
+
+          await query(
+            `UPDATE medical_records
+             SET blockchain_tx_hash = $1,
+                 is_blockchain_verified = $2,
+                 blockchain_verified_at = $3
+             WHERE id = $4`,
+            [result.transactionId, result.status !== 'failed', new Date().toISOString(), id],
+          );
+        } catch (error) {
+          console.warn(`  ⚠️  Blockchain anchor failed for record ${id}`, error);
+          await query(
+            `UPDATE medical_records
+             SET blockchain_tx_hash = $1,
+                 is_blockchain_verified = $2,
+                 blockchain_verified_at = $3
+             WHERE id = $4`,
+            [`pending:${id}`, false, new Date().toISOString(), id],
+          );
+        }
+      }
 
       recordCount++;
       console.log(`  ✓ Record: ${type} - ${diagnosis}`);
@@ -274,12 +494,16 @@ async function seedAppointments(
         AppointmentStatus.PENDING,
         AppointmentStatus.CONFIRMED,
         AppointmentStatus.COMPLETED,
+        AppointmentStatus.RESCHEDULED,
+        AppointmentStatus.CANCELLED,
       ]);
+      const notes = randomElement(APPOINTMENT_NOTES);
 
       await query(
-        `INSERT INTO appointments (id, pet_id, vet_id, date, time, duration_minutes, type, status, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())`,
-        [id, petId, vetId, date, time, 30, type, status],
+        `INSERT INTO appointments
+         (id, pet_id, vet_id, date, time, duration_minutes, type, status, notes, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())`,
+        [id, petId, vetId, date, time, 30, type, status, notes],
       );
 
       appointmentCount++;
@@ -312,12 +536,30 @@ async function seedMedications(
       const endDate = new Date(new Date(startDate).getTime() + durationDays * 24 * 60 * 60 * 1000)
         .toISOString()
         .split('T')[0];
-      const status = randomElement([MedicationStatus.ACTIVE, MedicationStatus.COMPLETED]);
+      const status = randomElement([
+        MedicationStatus.ACTIVE,
+        MedicationStatus.COMPLETED,
+        MedicationStatus.PAUSED,
+        MedicationStatus.DISCONTINUED,
+      ]);
+      const instructions = randomElement(MEDICATION_INSTRUCTIONS);
 
       await query(
-        `INSERT INTO medications (id, pet_id, name, dosage, frequency, start_date, end_date, status, duration_days, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())`,
-        [id, petId, name, dosage, frequency, startDate, endDate, status, durationDays],
+        `INSERT INTO medications
+         (id, pet_id, name, dosage, frequency, start_date, end_date, status, duration_days, instructions, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
+        [
+          id,
+          petId,
+          name,
+          dosage,
+          frequency,
+          startDate,
+          endDate,
+          status,
+          durationDays,
+          instructions,
+        ],
       );
 
       medicationCount++;
@@ -339,15 +581,50 @@ async function _clearExistingData(): Promise<void> {
   }
 }
 
+export async function cleanSeedData(): Promise<void> {
+  console.log('\n🧹 Removing seeded PetChain data...');
+
+  await query(
+    `DELETE FROM blockchain_transactions
+     WHERE record_id IN (
+       SELECT id FROM medical_records WHERE notes LIKE '%${SEED_MARKER}%'
+     )`,
+  );
+  await query(`DELETE FROM medical_records WHERE notes LIKE '%${SEED_MARKER}%'`);
+  await query(`DELETE FROM pets WHERE microchip_id LIKE 'SEED-%'`);
+  await query(
+    `DELETE FROM users
+     WHERE email LIKE '%@${SEED_OWNER_DOMAIN}'
+        OR email LIKE '%@${SEED_VET_DOMAIN}'`,
+  );
+
+  console.log('  ✓ Seeded users, pets, and related records removed');
+}
+
+function resolveConfig(config: Partial<SeedConfig>): Required<SeedConfig> {
+  const preset = config.preset ?? DEFAULT_CONFIG.preset;
+  const selectedPreset = PRESET_CONFIGS[preset] ?? PRESET_CONFIGS.standard;
+
+  return {
+    preset,
+    seedBlockchain: config.seedBlockchain ?? DEFAULT_CONFIG.seedBlockchain,
+    clean: config.clean ?? DEFAULT_CONFIG.clean,
+    ...selectedPreset,
+    ...config,
+  } as Required<SeedConfig>;
+}
+
 export async function seed(config: Partial<SeedConfig> = {}): Promise<void> {
-  const finalConfig = { ...DEFAULT_CONFIG, ...config };
+  const finalConfig = resolveConfig(config);
 
   console.log('\n🌱 Starting PetChain database seeding...');
   console.log(`Configuration:`, finalConfig);
 
   try {
-    // Optional: Clear previous seed data (comment out to preserve)
-    // await clearExistingData();
+    if (finalConfig.clean) {
+      await cleanSeedData();
+      return;
+    }
 
     const userIds = await seedUsers(finalConfig);
     const petIds = await seedPets(finalConfig, userIds);
@@ -368,6 +645,7 @@ export async function seed(config: Partial<SeedConfig> = {}): Promise<void> {
     console.log(
       `  • Medications: ${finalConfig.numOwners * finalConfig.petsPerOwner * finalConfig.medicationsPerPet}`,
     );
+    console.log(`  • Blockchain anchoring: ${finalConfig.seedBlockchain ? 'enabled' : 'disabled'}`);
   } catch (error) {
     console.error('\n❌ Seeding failed:', error);
     throw error;

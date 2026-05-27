@@ -63,6 +63,8 @@ ts-node backend/seeds/index.ts --owners 8 --vets 4 --pets 2 --records 4 --appoin
 | Records per Pet | `--records` | 3 | Number of medical records per pet |
 | Appointments per Pet | `--appointments` | 2 | Number of appointments per pet |
 | Medications per Pet | `--medications` | 1 | Number of medications per pet |
+| Seed blockchain metadata | `--seedBlockchain` | true | Anchor seeded records on Stellar testnet |
+| Clean seeded data | `--clean` | false | Remove only seeded demo data without affecting production |
 
 ## Programmatic Usage
 
@@ -91,14 +93,14 @@ await seed({
 
 **Owners:**
 - Random first and last names
-- Email format: `firstname.lastname{random}@example.com`
+- Email format: `firstname.lastname{random}@seed.petchain.app`
 - Random phone numbers
 - Role: `owner`
 - Email verified: `true`
 
 **Veterinarians:**
 - Random first and last names with "Dr." prefix
-- Email format: `firstname.lastname{random}@vetclinic.com`
+- Email format: `firstname.lastname{random}@vet.seed.petchain.app`
 - Random phone numbers
 - Role: `vet`
 - Email verified: `true`
@@ -119,6 +121,7 @@ await seed({
 - Treatment: Realistic treatments (e.g., "Prescribed antibiotics")
 - Visit date: Random date within last 180 days
 - Next visit date: Calculated as 1 year after visit date
+- Blockchain anchoring: seeded records are optionally anchored to Stellar testnet with transaction metadata stored in the database
 
 ### Appointments
 
