@@ -29,6 +29,7 @@ import PetListScreen from '../screens/PetListScreen';
 import PetShareScreen from '../screens/PetShareScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import QRScannerScreen from '../screens/QRScannerScreen';
+import ForumScreen from '../screens/ForumScreen';
 import analyticsService from '../services/analyticsService';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -254,6 +255,11 @@ export default function AppNavigator() {
           </RootStack.Screen>
 
           <RootStack.Screen name="Main" component={MainTabs} />
+          <RootStack.Screen
+            name="Forum"
+            component={ForumScreen}
+            options={{ headerShown: true, title: 'Forum' }}
+          />
 
           {/* Modals */}
           <RootStack.Group screenOptions={{ presentation: 'modal' }}>
