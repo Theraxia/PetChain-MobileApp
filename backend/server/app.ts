@@ -5,6 +5,7 @@ import { errBody } from './response';
 import { applySecurityHeaders } from '../middleware/securityHeaders';
 import { sanitizeInputs } from '../middleware/sanitize';
 import { createRedisSessionMiddleware } from '../middleware/redisSession';
+import authRouter from './routes/auth';
 import analyticsRouter from './routes/analytics';
 import appointmentsRouter from './routes/appointments';
 import auditLogsRouter from './routes/auditLogs';
@@ -18,6 +19,7 @@ import medicalRecordsRouter from './routes/medicalRecords';
 import medicationsRouter from './routes/medications';
 import paymentsRouter from './routes/payments';
 import petsRouter from './routes/pets';
+import photosRouter from './routes/photos';
 import privacyRouter from './routes/privacy';
 import searchRouter from './routes/search';
 import syncRouter from './routes/sync';
@@ -65,6 +67,7 @@ export function createApp(): Express {
   });
 
   // --- Application routes ------------------------------------------------
+  api.use('/auth', authRouter);
   api.use('/analytics', analyticsRouter);
   api.use('/backups', backupsRouter);
   api.use('/users', usersRouter);
